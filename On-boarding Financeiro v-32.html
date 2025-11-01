@@ -1,0 +1,2137 @@
+<!-- Versão V32 (Correção do Cursor nos Submódulos Aninhados) -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS - Onboarding Analista Financeiro Quality</title>
+    <!-- Carregamento do Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configuração do Tailwind para cor principal (Dark Quality) -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-quality': '#041e42', // HEX: Cor Principal (Dark Quality)
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    // Novo tamanho w-100 (400px)
+                    spacing: {
+                        '100': '25rem', // 400px
+                        '15': '3.75rem', // h-15 (60px)
+                    }
+                },
+            },
+        }
+    </script>
+    <!-- Link para Font Awesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Estilos Customizados para Sidebar e Body */
+        body {
+            /* CORRIGIDO: Voltando para a declaração padrão de font-family */
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7fa;
+        }
+        /* Definição da largura da Sidebar para w-100 (400px) */
+        .sidebar {
+            width: 20rem; /* Fallback for w-80 (320px) */
+        }
+        @media (min-width: 1024px) {
+            .lg\:w-100 {
+                width: 25rem; /* 400px */
+            }
+        }
+        /* Estilo para simular a barra de progresso (Module Progress) */
+        .progress-bar-container {
+            height: 10px;  
+            background-color: #475569; /* Slate 600 */
+            border-radius: 9999px; /* rounded-full */
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+        }
+        /* Progresso Geral (Cyan) */
+        .progress-bar-fill.global-fill {
+            background-color: #22d3ee; /* Cyan 400 */
+        }
+        /* Progresso Modular (Blue) */
+        .progress-bar-fill.module-fill {
+            background-color: #60a5fa; /* Blue 400 */
+        }
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;  
+            transition: width 0.3s ease, background-color 0.3s ease;
+            border-radius: 9999px; /* rounded-full */
+        }
+        /* Estilo para links da sidebar */
+        .sidebar-link {
+            padding: 8px 12px;
+            display: block;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            transition: background-color 0.2s;
+            color: #d1d5db; /* Light Gray */
+            font-weight: 500;
+        }
+        .sidebar-link:hover {
+            background-color: #1f2937; /* Darker Gray */
+            color: white;
+        }
+        .sidebar-link.active {
+            background-color: #1e40af; /* Blue 700 - Destaque ativo */
+            color: white;
+            font-weight: 700;
+        }
+        /* Cor de destaque da âncora */
+        .anchor-link {
+             color: #1d4ed8;
+             text-decoration: underline;
+        }
+        /* Estilo para o fluxo sequencial */
+        .ol-fluxo-sequencial li {
+            margin-left: 0.5rem; /* Ajuste para o espaçamento do marker */
+            padding-left: 0.5rem;
+        }
+        /* Estilo para o Expansor (Details/Summary) */
+        details {
+            margin-bottom: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            background-color: #ffffff;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        summary {
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between; /* Para separar o título do ícone */
+            background-color: #f9fafb;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s;
+            position: relative;
+            list-style: none; /* Remove a seta nativa para usarmos o ícone */
+        }
+        summary:hover {
+            background-color: #f3f4f6;
+        }
+        details[open] summary {
+            border-bottom: 1px solid #e5e7eb;
+            background-color: #ffffff;
+            border-radius: 0.5rem 0.5rem 0 0;
+        }
+        details > div {
+            padding: 1rem 1.5rem 1.5rem;
+        }
+        
+        /* NOVO CSS para o ícone de expansão (seta) - Posição e Rotação */
+        .expander-icon {
+            transition: transform 0.2s ease;
+            transform: rotate(0deg); /* Padrão: Aponta para direita */
+            color: #041e42;
+            flex-shrink: 0; /* Evita que o ícone encolha */
+        }
+        details[open] .expander-icon {
+            transform: rotate(90deg); /* Estado Aberto: Aponta para baixo */
+        }
+
+        /* Garante que o checkbox e o título usem o espaço restante e se alinhem */
+        summary .flex-1 {
+              margin-right: 1rem;
+        }
+        
+        /* Estilo para módulo BLOQUEADO (Aplica-se apenas ao checkbox principal e ao ícone de cadeado) */
+        .summary-locked-visual .submodule-checkbox {
+            cursor: not-allowed;
+        }
+
+        /* NOVO: Regras para forçar o cursor do sumário a ser pointer quando desbloqueado */
+        details:not([data-locked="true"]) summary {
+            cursor: pointer;
+        }
+        details:not([data-locked="true"]) summary input.submodule-checkbox {
+            cursor: pointer; /* Garante que o cursor do checkbox habilitado seja pointer */
+        }
+        
+    </style>
+</head>
+<body class="flex min-h-screen">
+
+    <!-- Sidebar (Menu Fixo) - Cor Principal: Dark Quality (#041e42) -->
+    <aside id="sidebar" class="sidebar lg:w-100 bg-dark-quality text-white p-6 hidden lg:block sticky top-0 h-screen overflow-y-auto">
+        <div class="mb-8">
+            <!-- LOGO CENTRALIZADA E AUMENTADA PARA H-15 -->
+            <div class="text-2xl font-black flex items-center justify-center">
+                <img src="https://lh3.googleusercontent.com/pw/AP1GczPV2uhqcFTKMgSobMAx7XcoohAuSqtdJb6uYuOKEVPvC2tObcqgp0Q_Jzx07FWhDZQNWMtDlhlxzbc4tkbpQRfYjZBtfCjCUWsM6ReNuol6UZnQHelJ1_kIzw8wOLRCMrkLm1W0bJEh2qTUNjoGbcf-=w1463-h878-s-no-gm?authuser=0" alt="Logo Quality" class="h-15 w-auto" onerror="this.onerror=null; this.src='https://placehold.co/60x60/041e42/ffffff?text=Q';" style="filter: brightness(0) invert(1);">
+            </div>
+        </div>
+        
+        <!-- BARRA DE PROGR ESSO GERAL (Total de Submódulos) -->
+        <div id="global-progress-box" class="bg-slate-800 p-4 rounded-lg shadow-xl mb-6">
+            <h3 class="text-sm font-semibold uppercase text-cyan-400 mb-2">Progresso Geral</h3>
+            <!-- Total atualizado para 23 (1 M0 + 22 M1-M5) -->
+            <h4 id="progress-text-global" class="font-bold text-white mb-2">0/23 Submódulos (0%)</h4>
+            <div class="progress-bar-container h-3">
+                <div id="progress-fill-global" class="progress-bar-fill global-fill" style="width: 0%;"></div>
+            </div>
+            <p class="text-xs text-gray-400 mt-2">Rastreamento de todas as etapas.</p>
+        </div>
+
+        <!-- BLOCO PRINCIPAL DE NAVEGAÇÃO E PROGRESSO MODULAR -->
+        <div class="bg-slate-800 p-4 rounded-lg shadow-xl">
+            <h3 class="text-sm font-semibold uppercase text-gray-400 mb-2">MÓDULOS</h3>
+            <nav id="sidebar-nav">
+                
+                <!-- NOVO MÓDULO 0 (Sempre ativo ao iniciar) -->
+                <a href="#" data-module="modulo0" class="sidebar-link active" onclick="showModule(event, 'modulo0')">0. Missão e Propósito</a>
+                <div id="progress-box-modulo0" class="pl-3 pb-3 -mt-2">
+                    <div class="progress-bar-container">
+                        <div id="progress-fill-modulo0" class="progress-bar-fill module-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- MÓDULO 1 (BLOQUEADO POR PADRÃO) -->
+                <a href="#" data-module="modulo1" id="link-modulo1" class="sidebar-link text-gray-600 cursor-not-allowed" data-locked-by-m0="true" onclick="showModule(event, 'modulo1')">1. Ferramentas de Batalha</a>
+                <div id="progress-box-modulo1" class="pl-3 pb-3 -mt-2">
+                    <div class="progress-bar-container">
+                        <div id="progress-fill-modulo1" class="progress-bar-fill module-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- MÓDULO 2 (BLOQUEADO POR PADRÃO) -->
+                <a href="#" data-module="modulo2" id="link-modulo2" class="sidebar-link text-gray-600 cursor-not-allowed" data-locked-by-m0="true" onclick="showModule(event, 'modulo2')">2. Ciclo de RECEBIMENTOS</a>
+                <div id="progress-box-modulo2" class="pl-3 pb-3 -mt-2">
+                    <div class="progress-bar-container">
+                        <div id="progress-fill-modulo2" class="progress-bar-fill module-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- MÓDULO 3 (BLOQUEADO POR PADRÃO) -->
+                <a href="#" data-module="modulo3" id="link-modulo3" class="sidebar-link text-gray-600 cursor-not-allowed" data-locked-by-m0="true" onclick="showModule(event, 'modulo3')">3. Ciclo de PAGAMENTOS</a>
+                <div id="progress-box-modulo3" class="pl-3 pb-3 -mt-2">
+                    <div class="progress-bar-container">
+                        <div id="progress-fill-modulo3" class="progress-bar-fill module-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- MÓDULO 4 (BLOQUEADO POR PADRÃO) -->
+                <a href="#" data-module="modulo4" id="link-modulo4" class="sidebar-link text-gray-600 cursor-not-allowed" data-locked-by-m0="true" onclick="showModule(event, 'modulo4')">4. Interface e Rotinas</a>
+                <div id="progress-box-modulo4" class="pl-3 pb-3 -mt-2">
+                    <div class="progress-bar-container">
+                        <div id="progress-fill-modulo4" class="progress-bar-fill module-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- MÓDULO 5 (BLOQUEADO POR PADRÃO) -->
+                <a href="#" data-module="modulo5" id="link-modulo5" class="sidebar-link text-gray-600 cursor-not-allowed" data-locked-by-m0="true" onclick="showModule(event, 'modulo5')">5. Contábil e Análise</a>
+                <div id="progress-box-modulo5" class="pl-3 pb-3 -mt-2">
+                    <div class="progress-bar-container">
+                        <div id="progress-fill-modulo5" class="progress-bar-fill module-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+            </nav>
+        </div>
+    </aside>
+
+    <!-- Área de Conteúdo Principal -->
+    <main id="content-area" class="flex-1 p-8 lg:p-12 overflow-y-auto content-area">
+
+        <!-- Header e Título Principal -->
+        <header class="mb-8 pb-4 border-b border-gray-200">
+            <!-- Título Alterado e linha de versão removida do header -->
+            <h1 class="text-4xl font-extrabold text-dark-quality mb-2">Manual de Trabalho: Analista Financeiro</h1>
+        </header>
+        
+        <!-- MÓDULO 0: PORTAL DA CULTURA E PROPÓSITO (NOVA PÁGINA INICIAL) -->
+        <section id="modulo0" class="mb-12" style="display: block;"> 
+            <h2 class="text-3xl font-bold text-dark-quality mb-4">Módulo 0: A Missão: Quem Somos e o Porquê Fazemos</h2>
+            <p class="text-gray-700 mb-6">Propósito: Dar as boas-vindas ao novo analista, <span class="font-bold">imergindo-o na Cultura, Valores e Propósito da Quality</span>. Este módulo deve ser lido, compreendido e ter o compromisso assinalado antes de acessar qualquer ferramenta ou processo técnico.</p>
+
+            <details id="submodulo-0-1" class="submodule-expander" open>
+                <!-- REMOVIDO CHECKBOX DO SUMMARY -->
+                <summary class="flex justify-between items-center">
+                    <span class="flex items-center space-x-3 flex-1">
+                        <span class="text-xl font-semibold text-gray-800">0.1 - O Atlas Estratégico da Quality</span>
+                    </span>
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div class="space-y-6">
+                    <!-- 0.1 - Bem-vindo -->
+                    <h4 class="text-2xl font-bold text-dark-quality"><i class="fas fa-handshake text-cyan-600 mr-2"></i> 👋 BEM-VINDO(A) À MISSÃO!</h4>
+                    <p>Parabéns, você é o(a) mais novo(a) parceiro(a) na Quality.</p>
+                    <p class="text-gray-700">Se você está aqui, não é por acaso. Não procuramos apenas "operadores de sistema"; procuramos <span class="font-bold">guardiões de propósito</span>. Seu trabalho, como Analista Financeiro, vai muito além de planilhas e lançamentos. Você está entrando na linha de frente para construir não apenas riqueza, mas um <span class="font-bold">legado de confiança</span>.</p>
+
+                    <!-- 0.1.1 Nossa Identidade -->
+                    <h4 class="text-xl font-bold text-gray-800 border-b pb-1">0.1.1 Nossa Identidade: De Onde Viemos e Aonde Vamos</h4>
+                    
+                    <h5 class="font-bold text-dark-quality ml-4">0.1.1.1 A Conexão Crítica: Quality e Cosechas</h5>
+                    <p class="ml-4 text-gray-700">A jornada da Quality tem suas raízes no modelo de expansão da Cosechas Master.</p>
+                    <ul class="list-disc ml-8 space-y-2 text-sm text-gray-700">
+                        <li><span class="font-bold">O Desafio Original:</span> A Cosechas, focada no crescimento rápido, percebeu a necessidade de uma estrutura robusta para a montagem das lojas e a distribuição de insumos em escala, crucial para manter a qualidade.</li>
+                        <li><span class="font-bold">O Nosso Nascimento:</span> A Quality foi fundada em dezembro de 2022 para resolver essa lacuna. Nascemos com o conhecimento prático do dia a dia de uma loja e o objetivo de atuar como o braço operacional e financeiro essencial para os franqueados da Cosechas no Brasil. Nosso escopo é total: garantir que a infraestrutura de montagem de lojas, o fornecimento de insumos e a gestão de tecnologia (software) estejam sólida, transparente e sustentável.</li>
+                    </ul>
+
+                    <h5 class="font-bold text-dark-quality ml-4 mt-6">0.1.1.2 Missão, Visão e Propósito (Os Nossos Ativos)</h5>
+                    <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 ml-4 flex items-start space-x-3 rounded-lg">
+                        <i class="fas fa-exclamation-triangle text-yellow-600 text-xl mt-1"></i>
+                        <p class="text-yellow-800">ATENÇÃO: Estes são os ativos centrais da Quality e <span class="font-bold">representam a fundação do nosso trabalho.</span></p>
+                    </div>
+
+                    <!-- Bloco de Manifesto (Missão/Visão) -->
+                    <div class="ml-4 p-4 rounded-lg bg-blue-50 border border-blue-200 space-y-3">
+                        <p class="font-bold text-blue-800 text-lg"><i class="fas fa-flag text-dark-quality mr-2"></i> MISSÃO:</p>
+                        <blockquote class="border-l-4 border-dark-quality pl-4 italic text-gray-700">"Estamos aqui para construir o sonho do nosso cliente, dando a ele o apoio, a tranquilidade e a estrutura que ele precisa para ter sucesso."</blockquote>
+                        
+                        <p class="font-bold text-blue-800 text-lg pt-3"><i class="fas fa-eye text-dark-quality mr-2"></i> VISÃO:</p>
+                        <blockquote class="border-l-4 border-dark-quality pl-4 italic text-gray-700">"Ser a referência em suporte e inovação na rede Cosechas, transformando cada loja em uma história de sucesso."</blockquote>
+                        
+                        <p class="font-bold text-blue-800 text-lg pt-3"><i class="fas fa-heart text-dark-quality mr-2"></i> O Nosso Mantra Cultural:</p>
+                        <blockquote class="border-l-4 border-dark-quality pl-4 italic text-gray-700">"Na Quality, acreditamos em <span class="font-bold">relações</span> e não em <span class="font-bold">transações</span>."</blockquote>
+                    </div>
+
+                    <!-- 0.1.2 Nossos Valores Inegociáveis -->
+                    <h4 class="text-xl font-bold text-gray-800 border-b pb-1 pt-4">0.1.2 Nossos Valores Inegociáveis (A Nossa Bússola Moral)</h4>
+                    <p class="text-gray-700 mb-4">Na Quality, o sucesso financeiro é uma consequência de honrarmos estes três pilares:</p>
+                    <div class="grid md:grid-cols-3 gap-4 text-sm text-gray-700">
+                        <div class="p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                            <p class="font-bold text-lg text-dark-quality mb-1"><i class="fas fa-balance-scale text-dark-quality mr-2"></i> Ética:</p>
+                            <p>A honestidade é o nosso alicerce. Em um mercado onde a ansiedade é alta, a <span class="font-bold">transparência e a correção</span> em cada registro são a nossa promessa. <span class="font-bold text-red-600">Jamais negociaremos a ética por lucro.</span></p>
+                        </div>
+                        <div class="p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                            <p class="font-bold text-lg text-dark-quality mb-1"><i class="fas fa-hands-helping text-dark-quality mr-2"></i> Empatia:</p>
+                            <p>Lembre-se sempre de quem é o nosso cliente: um franqueado que investiu as economias de uma vida. Ele se sente angustiado. Nosso papel é transformar essa angústia em <span class="font-bold">tranquilidade e estrutura</span>. Sua proatividade é a empatia em ação.</p>
+                        </div>
+                        <div class="p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                            <p class="font-bold text-lg text-dark-quality mb-1"><i class="fas fa-star text-dark-quality mr-2"></i> Excelência:</p>
+                            <p>Nossa margem de erro deve ser <span class="font-bold text-red-600">zero</span>. Nossos sistemas são a armadura da excelência. O rigor no seu trabalho é o que garante a sustentabilidade da Quality e o sucesso do nosso franqueado.</p>
+                        </div>
+                    </div>
+
+                    <!-- 0.1.3 O Seu Papel Estratégico -->
+                    <h4 class="text-xl font-bold text-gray-800 border-b pb-1 pt-4">0.1.3 O Seu Papel Estratégico (O Guardião do Propósito)</h4>
+                    <p class="text-gray-700 mb-4">Você é o filtro. Você é o garantidor.</p>
+                    
+                    <h5 class="font-bold text-dark-quality ml-4">Nosso Cliente é o Investidor Novo:</h5>
+                    <!-- CONTEÚDO ATUALIZADO: Incluindo "emoção" -->
+                    <p class="ml-4 text-gray-700">Ele nos procura em um momento de <span class="font-bold">emoção e vulnerabilidade</span>, aplicando o capital de uma vida.</p>
+                    
+                    <h5 class="font-bold text-dark-quality ml-4 mt-3">O Papel do Financeiro na Relação:</h5>
+                    <ul class="list-disc ml-8 space-y-2 text-sm text-gray-700">
+                        <li>Seu primeiro contato com o franqueado (Boas-Vindas) não é sobre uma cobrança, mas sobre o <span class="font-bold">início da nossa parceria e o fornecimento de estrutura.</span></li>
+                        <li>Ao participar da reunião pós-orçamento, você não explica um protocolo, mas sim a <span class="font-bold">estratégia de fluxo de pagamentos (70% + 30%)</span>, mostrando que a Quality tem um plano seguro para gerir o dinheiro dele e garantir que o projeto comece sem interrupções.</li>
+                    </ul>
+
+                    <h5 class="font-bold text-dark-quality ml-4 mt-3">Guardião da Saúde Financeira Global:</h5>
+                    <p class="ml-4 text-gray-700">Seu papel é ser o cérebro da empresa. Você é responsável por gerir o <span class="font-bold">fluxo de caixa total da Quality</span>, garantindo a captação e o controle de todas as fontes de receita—sejam elas as taxas de montagem de projetos, os rebates de insumos, ou as tarifas de software. Sua precisão assegura que a empresa honre todos os seus compromissos e mantenha a sustentabilidade para cumprir a nossa Visão.</p>
+
+                    <!-- BLOCO DE COMPROMISSO (SEU PRÓXIMO PASSO CRÍTICO) -->
+                    <div class="mt-8 pt-4 border-t-2 border-dark-quality">
+                        <h4 class="font-bold text-dark-quality text-xl mb-4"><i class="fas fa-arrow-right text-red-600 mr-2"></i> SEU PRÓXIMO PASSO CRÍTICO:</h4>
+                        <p class="text-sm text-gray-700 mb-4">Para desbloquear o Módulo 1 (Conhecendo Suas Ferramentas de Batalha) e todos os módulos seguintes, você deve assinalar o campo abaixo, confirmando que leu e está alinhado com o Atlas Estratégico da Quality.</p>
+                        
+                        <div class="flex items-start space-x-3 p-3 bg-white border-2 border-red-500 rounded-lg">
+                            <input type="checkbox" 
+                                class="submodule-checkbox h-5 w-5 mt-1 rounded border-red-500 text-blue-600 focus:ring-blue-500" 
+                                data-module-id="modulo0"
+                                data-submodule-id="submodulo-0-1-commitment"
+                                data-is-commitment="true"
+                                onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);"
+                                aria-label="Compromisso com a Missão Quality">
+                            <label class="text-base font-bold text-dark-quality select-none">
+                                Li e confirmo meu compromisso com a Missão Quality:
+                                <span class="font-normal text-gray-700 block">Construir riqueza com Ética, Empatia e Excelência, transformando a ansiedade do franqueado em confiança, e contribuindo para a visão de ser uma referência em suporte e inovação.</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </section>
+
+        <!-- Conteúdo do Manual (Blocos Transpostos) -->
+
+        <!-- Módulo 1 - CONTEÚDO MODULAR AGORA COM EXPANSOR (DETAILS/SUMMARY) -->
+        <section id="modulo1" class="mb-12" style="display: none;">
+            <!-- As barras de progresso modular foram movidas para a sidebar -->
+            <h2 class="text-3xl font-bold text-dark-quality mb-2">Módulo 1: Conhecendo Suas Ferramentas de Batalha</h2>
+            <p class="text-gray-700 mb-6">Propósito: Dar ao analista <span class="font-bold">fluência na navegação e interpretação</span> das ferramentas antes de executar qualquer tarefa.</p>
+
+            <!-- 1.1 - O Ecossistema Quality -->
+            <details id="submodulo-1-1" class="submodule-expander">
+                <summary class="flex justify-between items-center">
+                    <!-- Checkbox e Título - Adicionado flex-1 -->
+                    <span class="flex items-center space-x-3 flex-1">
+                        <!-- Este checkbox contribui para a barra principal do Módulo 1 -->
+                        <input type="checkbox" 
+                            class="submodule-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                            data-module-id="modulo1"
+                            data-submodule-id="submodulo-1-1"
+                            data-is-main-module="true" 
+                            onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);">
+                        <span class="text-xl font-semibold text-gray-800">1.1 - O Ecossistema Quality</span>
+                    </span>
+                    <!-- Seta Dinâmica (Ícone) - Movido para o final -->
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div>
+                    <p class="text-gray-700 mb-4">A operação financeira da Quality se apoia em <span class="font-bold">dois sistemas integrados</span>:</p>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <!-- AppSheet Card -->
+                        <div class="border border-cyan-200 p-4 rounded-lg bg-cyan-50">
+                            <p class="font-bold text-lg text-cyan-600 mb-1">AppSheet (<span class="font-bold">Cérebro da Operação</span>)</p>
+                            <p class="text-gray-700">É o cérebro da operação de montagens. Todos os lançamentos financeiros (<span class="font-bold">receitas e despesas</span>) relacionados a um projeto de franqueado devem nascer aqui. Ele gerencia o <span class="font-bold">ciclo de vida do projeto</span>.</p>
+                        </div>
+                        <!-- Omie ERP Card -->
+                        <div class="border border-orange-200 p-4 rounded-lg bg-orange-50">
+                            <p class="font-bold text-lg text-orange-600 mb-1">Omie ERP (<span class="font-bold">Coração Financeiro</span>)</p>
+                            <p class="text-gray-700">É o coração financeiro e fiscal da empresa. Ele centraliza o contas a pagar/receber, a conciliação bancária (via <span class="font-bold text-orange-600">Omie.Cash</span>) e a emissão de notas. O AppSheet se comunica com o Omie para <span class="font-bold">criar os registros formais</span>.</p>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+            <!-- 1.2 - Dominando o AppSheet (Visão Financeira) -->
+            <details id="submodulo-1-2" class="submodule-expander">
+                <summary class="flex justify-between items-center">
+                     <!-- Checkbox de Conclusão - Adicionado flex-1 -->
+                    <span class="flex items-center space-x-3 flex-1">
+                         <!-- Este checkbox contribui para a barra principal do Módulo 1 -->
+                        <input type="checkbox" 
+                            class="submodule-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                            data-module-id="modulo1"
+                            data-submodule-id="submodulo-1-2"
+                            data-is-main-module="true" 
+                            onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);">
+                        <span class="text-xl font-semibold text-gray-800">1.2 - Dominando o <span class="text-cyan-600">AppSheet</span> (Visão Financeira)</span>
+                    </span>
+                    <!-- Seta Dinâmica (Ícone) - Movido para o final -->
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div>
+                    <p class="font-semibold text-gray-700 mb-3">O analista deve saber interpretar os <span class="font-bold">sinais visuais do Dashboard</span>:</p>
+
+                    <ul class="list-disc ml-6 space-y-2 text-gray-700">
+                        <li><i class="fas fa-dollar-sign text-green-500 mr-2"></i> <span class="font-bold">Ícone (Cifrão):</span> Significa que o orçamento do projeto está saudável e <span class="font-bold">sem pendências</span> de faturamento de comissão.</li>
+                        <li><i class="fas fa-briefcase text-red-500 mr-2"></i> <span class="font-bold">Ícone (Bolsa Vermelha):</span> É um <span class="font-bold">alerta visual crítico</span>. Significa que existem comissões de fornecedores prontas para serem faturadas para aquele projeto.</li>
+                        <li>
+                            <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i> <span class="font-bold">Alertas Visuais Gerais (Ícones Vermelhos):</span> O Dashboard exibe ícones que se tornam vermelhos para indicar alertas. Essas alertas visuais são importantes para todos os usuários. Se o analista identificar um alerta que pertence a outra área, deverá <span class="font-bold">notificar a área encarregada</span> para que a pendência seja cuidada.
+                        </li>
+                    </ul>
+                    <p class="text-gray-700 mt-4">O analista deve ter <span class="font-bold">fluência em acessar os projetos e a área de relatórios</span> (<span class="font-mono bg-gray-100 p-1 rounded">Admin > Mix > Relatórios</span>).</p>
+                </div>
+            </details>
+
+            <!-- 1.3 - Dominando o Omie (Visão Financeira) -->
+            <details id="submodulo-1-3" class="submodule-expander">
+                <summary class="flex justify-between items-center">
+                     <!-- Checkbox de Conclusão - Adicionado flex-1 -->
+                    <span class="flex items-center space-x-3 flex-1">
+                         <!-- Este checkbox contribui para a barra principal do Módulo 1 -->
+                        <input type="checkbox" 
+                            class="submodule-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                            data-module-id="modulo1"
+                            data-submodule-id="submodulo-1-3"
+                            data-is-main-module="true" 
+                            onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);">
+                        <span class="text-xl font-semibold text-gray-800">1.3 - Dominando o <span class="text-orange-600">Omie</span> (Visão Financeira)</span>
+                    </span>
+                    <!-- Seta Dinâmica (Ícone) - Movido para o final -->
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div>
+                    <p class="font-semibold text-gray-700 mb-3">O analista deve ter <span class="font-bold">familiaridade com a navegação</span> nos dois módulos principais:</p>
+                    <ul class="list-disc ml-6 space-y-2 text-gray-700">
+                        <li><span class="font-bold">Módulo de Finanças:</span> Onde se encontram as contas a pagar, receber, conciliação, fluxo de caixa e relatórios.</li>
+                        <li><span class="font-bold">Módulo de Serviços e NFSe:</span> Utilizado para a emissão e gestão das notas fiscais de serviço.</li>
+                    </ul>
+                </div>
+            </details>
+
+            <!-- 1.4 - Plano de Capacitação Obrigatório: Omie ERP - VISIBILIDADE CONDICIONAL -->
+            <!-- data-locked não bloqueia o conteúdo, apenas o checkbox de conclusão -->
+            <details id="submodulo-1-4" class="submodule-expander" data-locked="true">
+                <!-- Adicionada classe summary-locked-visual para JS manipular visualmente o bloqueio -->
+                <summary class="summary-locked-visual flex justify-between items-center">
+                    <!-- Checkbox de Conclusão - Adicionado flex-1 -->
+                    <span class="flex items-center space-x-3 flex-1">
+                         <!-- Este checkbox contribui para a barra principal do Módulo 1 -->
+                        <input type="checkbox" 
+                            class="submodule-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                            data-module-id="modulo1"
+                            data-submodule-id="submodulo-1-4"
+                            data-is-main-module="true" 
+                            disabled 
+                            onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);">
+                        <span class="text-xl font-semibold text-gray-800">1.4 - Plano de Capacitação Obrigatório: <span class="text-orange-600">Omie ERP</span></span>
+                        <!-- Ícone de bloqueio, visível se o data-locked for true -->
+                        <i id="lock-icon-submodulo-1-4" class="fas fa-lock text-red-600 ml-2" style="display:inline-block;"></i>
+                    </span>
+                    <!-- Seta Dinâmica (Ícone) - Movido para o final -->
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div>
+                    <p class="text-gray-700 mb-2">Este é o <span class="font-bold">guia definitivo de estudos</span> na plataforma Omie. O tempo de duração de cada vídeo deve ser usado para planejar o cronograma de onboarding.</p>
+                    <p class="text-sm text-gray-500 mb-4">Acesse o portal de treinamentos: <a href="https://portal.omie.com.br/treinamentos" target="_blank" class="anchor-link font-semibold">https://portal.omie.com.br/treinamentos</a></p>
+
+
+                    <!-- Checklist/Progress Bar (Estática) -->
+                    <!-- Corrigido: Novo ID para a barra aninhada do Omie -->
+                    <div id="progress-container-submodulo-1-4" class="mb-4" data-total-items="28">
+                        <!-- CORRIGIDO: Total de itens atualizado para 28 -->
+                        <h4 id="progress-text-submodulo-1-4" class="font-bold text-gray-700 mb-2">Progresso Omie: 0/28 Itens (0%)</h4>
+                        <div class="progress-bar-container h-2">
+                            <div id="progress-fill-submodulo-1-4" class="progress-bar-fill bg-orange-500" style="width: 0%;"></div>
+                        </div>
+                        <p class="text-xs text-red-600 mt-2 font-semibold">Complete todos os itens abaixo para desbloquear o módulo 1.4.</p>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!-- Módulo: SERVIÇOS E NFSe -->
+                        <div>
+                            <h4 class="text-lg font-bold text-dark-quality border-b pb-1 mb-2">Módulo: SERVIÇOS E NFSe (4 Vídeos)</h4>
+                            <ul class="space-y-1 text-sm text-gray-700" id="omie-checklist-ul-nfse">
+                                <!-- HTML limpo para o JS injetar o checkbox corretamente -->
+                                <li class="omie-item" data-id="omie-1"> (00:12:44) - Faturando Notas Fiscais e Recibos de Serviços Prestados</li>
+                                <li class="omie-item" data-id="omie-2"> (00:02:16) - Cancelamento de Notas Fiscais e Recibos</li>
+                                <li class="omie-item" data-id="omie-3"> (00:04:51) - Painel de NFS-e</li>
+                                <li class="omie-item" data-id="omie-4"> (00:11:46) - Personalizando Relatórios de Serviços</li>
+                            </ul>
+                        </div>
+
+                        <!-- Módulo: FINANÇAS -->
+                        <div>
+                            <h4 class="text-lg font-bold text-dark-quality border-b pb-1 mb-2">Módulo: FINANÇAS (24 Vídeos)</h4>
+                            <!-- NOVO ID para a lista de finanças, para separar as listas Omie. O JS será atualizado para procurar os itens em ambos IDs -->
+                            <ul class="space-y-1 text-sm text-gray-700 max-h-96 overflow-y-auto pr-2" id="omie-checklist-ul-financas">
+                                <!-- HTML limpo para o JS injetar o checkbox corretamente -->
+                                <li class="omie-item" data-id="omie-5"> (00:03:16) - Resumo Financeiro</li>
+                                <li class="omie-item" data-id="omie-6"> (00:05:29) - Movimentação de Contas Correntes</li>
+                                <li class="omie-item" data-id="omie-7"> (00:06:26) - Registrando pagamento de Impostos</li>
+                                <li class="omie-item" data-id="omie-8"> (00:11:13) - Registrando pagamento de salários de Funcionários</li>
+                                <li class="omie-item" data-id="omie-9"> (00:07:09) - Pagamento de Impostos Retidos para Serviços Tomados</li>
+                                <li class="omie-item" data-id="omie-10"> (00:06:29) - Conciliação manual de Contas Correntes</li>
+                                <li class="omie-item" data-id="omie-11"> (00:21:42) - Conciliação de Contas Correntes importando o arquivo do Banco</li>
+                                <li class="omie-item" data-id="omie-12"> (00:05:06) - Análise de Inadimplência</li>
+                                <li class="omie-item" data-id="omie-13"> (00:07:29) - Analisando o Fluxo de Caixa</li>
+                                <li class="omie-item" data-id="omie-14"> (00:05:48) - Analisando o DRE</li>
+                                <li class="omie-item" data-id="omie-15"> (00:10:46) - Previsto X Realizado</li>
+                                <li class="omie-item" data-id="omie-16"> (00:04:41) - Apurando as Comissões de Vendedores</li>
+                                <li class="omie-item" data-id="omie-17"> (00:15:56) - Integração com os Bancos</li>
+                                <li class="omie-item" data-id="omie-18"> (00:04:04) - Alterando a data de vencimento de um boleto gerado</li>
+                                <li class="omie-item" data-id="omie-19"> (00:07:56) - Aprendendo mais sobre Relatórios de contas a pagar e receber</li>
+                                <li class="omie-item" data-id="omie-20"> (00:07:40) - Realizando transações usando a OmieCASH</li>
+                                <li class="omie-item" data-id="omie-21"> (00:06:50) - Como cadastrar conta a pagar com recorrência?</li>
+                                <li class="omie-item" data-id="omie-22"> (00:05:40) - Como cadastrar conta a pagar por inserção manual?</li>
+                                <li class="omie-item" data-id="omie-23"> (00:03:41) - Como cadastrar conta a pagar via boleto?</li>
+                                <li class="omie-item" data-id="omie-24"> (00:05:27) - Como cadastrar conta a pagar via NF-e?</li>
+                                <li class="omie-item" data-id="omie-25"> (00:03:48) - Como cadastrar conta a receber via boleto?</li>
+                                <li class="omie-item" data-id="omie-26"> (00:05:54) - Como cadastrar conta a receber via inserção manual</li>
+                                <li class="omie-item" data-id="omie-27"> (00:03:35) - Como cadastrar conta a receber via NF-e?</li>
+                                <li class="omie-item" data-id="omie-28"> (00:07:13) - Como emitir boletos a partir do faturamento de NFS-e ou Recibo</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+            <!-- 1.5 - Plano de Capacitação: ClickUp -->
+            <!-- Adicionado data-locked para bloqueio inicial do 1.5 -->
+            <details id="submodulo-1-5" class="submodule-expander" data-locked="true">
+                <!-- Adicionada classe summary-locked-visual para JS manipular visualmente o bloqueio -->
+                <summary class="summary-locked-visual flex justify-between items-center">
+                    <!-- Checkbox de Conclusão - Adicionado flex-1 -->
+                    <span class="flex items-center space-x-3 flex-1">
+                         <!-- Este checkbox contribui para a barra principal do Módulo 1 -->
+                        <input type="checkbox" 
+                            class="submodule-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                            data-module-id="modulo1"
+                            data-submodule-id="submodulo-1-5"
+                            disabled
+                            data-is-main-module="true" 
+                            onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);">
+                        <span class="text-xl font-semibold text-gray-800">1.5 - Plano de Capacitação: <span class="text-purple-600">ClickUp</span></span>
+                         <!-- Ícone de bloqueio para o 1.5 -->
+                         <i id="lock-icon-submodulo-1-5" class="fas fa-lock text-red-600 ml-2" style="display:inline-block;"></i>
+                    </span>
+                    <!-- Seta Dinâmica (Ícone) - Movido para o final -->
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div>
+                    <!-- Novo: Barra de Progresso do Submódulo 1.5 -->
+                    <div class="mb-4" id="progress-container-submodulo-1-5" data-total-items="6">
+                        <h4 id="progress-text-submodulo-1-5" class="font-bold text-gray-700 mb-2 text-sm">Progresso ClickUp: 0/6 Itens (0%)</h4>
+                        <div class="progress-bar-container h-2">
+                            <div id="progress-fill-submodulo-1-5" class="progress-bar-fill bg-purple-500" style="width: 0%;"></div>
+                        </div>
+                        <p class="text-xs text-red-600 mt-2 font-semibold">Complete todos os itens abaixo para desbloquear o módulo 1.5.</p>
+                    </div>
+
+                    <p class="font-bold text-gray-700 mb-2">Propósito:</p>
+                    <p class="text-gray-700 mb-4">Garantir que o analista tenha <span class="font-bold">total domínio</span> da ferramenta de gestão de projetos para se comunicar de forma eficaz com a equipe, entender o progresso e documentar as ações financeiras.</p>
+
+                    <div class="bg-purple-50 border-l-4 border-purple-500 p-4 mb-4">
+                        <p class="font-bold text-purple-800 mb-1">Papel do ClickUp:</p>
+                        <p class="text-purple-700 text-sm">O <span class="font-bold">ClickUp</span> é a plataforma onde o cronograma é visualizado, as tarefas são acompanhadas e toda a documentação do projeto é centralizada. As ações de execução financeira, no entanto, acontecem <span class="font-bold">fora do ClickUp</span> (no AppSheet ou Omie) e são documentadas no ClickUp. A execução dos processos nas plataformas e a documentação no ClickUp são a única garantia de que a Diretoria irá ter a informação completa e atualizada quando sejam gerados os relatórios da análise da gestão.</p>
+                    </div>
+
+                    <h4 class="text-lg font-bold text-gray-700 mb-2">Treinamentos Sugeridos:</h4>
+                    <!-- REMOVIDO IFRAME E RETORNADO AO LINK SIMPLES -->
+                    <div class="bg-white p-4 rounded-xl shadow-md mb-6 border border-purple-200">
+                        <p class="font-bold text-lg text-purple-700 mb-3 flex items-center">
+                            <i class="fas fa-video mr-2"></i> Vídeo Aula: Visão Geral da Interface ClickUp (00:47:12)
+                        </p>
+                        <a href="https://www.youtube.com/watch?v=7OcKRyZxqCY" target="_blank" class="anchor-link font-semibold text-sm hover:text-purple-600 transition-colors">
+                            Acessar Treinamento no YouTube (Clique Aqui)
+                        </a>
+                    </div>
+                    
+                    <ul class="space-y-1 text-sm text-gray-700" id="clickup-checklist">
+                        <li class="flex items-start space-x-2 training-item" data-module-id="modulo1" data-submodule-id="submodulo-1-5-2">
+                            <input type="checkbox" class="h-4 w-4 mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500" onclick="event.stopPropagation(); toggleNestedChecklistCompletion(this, 'submodulo-1-5');">
+                            <p>Visão Geral da Interface do ClickUp.</p>
+                        </li>
+                        <li class="flex items-start space-x-2 training-item" data-module-id="modulo1" data-submodule-id="submodulo-1-5-3">
+                            <input type="checkbox" class="h-4 w-4 mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500" onclick="event.stopPropagation(); toggleNestedChecklistCompletion(this, 'submodulo-1-5');">
+                            <p>Como navegar entre Projetos, Listas e Tarefas.</p>
+                        </li>
+                        <li class="flex items-start space-x-2 training-item" data-module-id="modulo1" data-submodule-id="submodulo-1-5-4">
+                            <input type="checkbox" class="h-4 w-4 mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500" onclick="event.stopPropagation(); toggleNestedChecklistCompletion(this, 'submodulo-1-5');">
+                            <p>Como atualizar o status de uma tarefa.</p>
+                        </li>
+                        <li class="flex items-start space-x-2 training-item" data-module-id="modulo1" data-submodule-id="submodulo-1-5-5">
+                            <input type="checkbox" class="h-4 w-4 mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500" onclick="event.stopPropagation(); toggleNestedChecklistCompletion(this, 'submodulo-1-5');">
+                            <p>Como alterar datas de vencimento.</p>
+                        </li>
+                        <li class="flex items-start space-x-2 training-item" data-module-id="modulo1" data-submodule-id="submodulo-1-5-6">
+                            <input type="checkbox" class="h-4 w-4 mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500" onclick="event.stopPropagation(); toggleNestedChecklistCompletion(this, 'submodulo-1-5');">
+                            <p>Como usar comentários e menções (@) para se comunicar.</p>
+                        </li>
+                        <li class="flex items-start space-x-2 training-item" data-module-id="modulo1" data-submodule-id="submodulo-1-5-7">
+                            <input type="checkbox" class="h-4 w-4 mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500" onclick="event.stopPropagation(); toggleNestedChecklistCompletion(this, 'submodulo-1-5');">
+                            <p>Como anexar arquivos e documentos a uma tarefa.</p>
+                        </li>
+                    </ul>
+                </div>
+            </details>
+        </section>
+
+        <!-- Módulo 2 -->
+        <section id="modulo2" class="mb-12">
+            <!-- As barras de progresso modular foram movidas para a sidebar -->
+            <h2 class="text-3xl font-bold text-dark-quality mb-2">Módulo 2: O Ciclo de RECEBIMENTOS (Como o Dinheiro Entra)</h2>
+            <p class="text-gray-700 mb-6">Propósito: Detalhar, passo a passo, todos os processos que <span class="font-bold">garantem o fluxo de caixa positivo</span>.</p>
+
+            <!-- Princípio Fundamental -->
+            <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-6 flex items-start space-x-3 rounded-lg">
+                <i class="fas fa-lightbulb text-yellow-600 text-xl mt-1"></i>
+                <div>
+                    <h4 class="font-bold text-yellow-800">Princípio Fundamental:</h4>
+                    <p class="text-yellow-700">A saúde financeira da Quality depende da nossa <span class="font-bold">proatividade em gerenciar o fluxo de caixa</span>. A primeira responsabilidade do analista é garantir que todas as receitas sejam cobradas e recebidas nos prazos corretos, utilizando o <span class="font-bold text-cyan-600">AppSheet</span> como ferramenta principal para as operações de montagem.</p>
+                </div>
+            </div>
+
+            <!-- Ponto de Atenção Crítico (Montagens) -->
+            <div class="bg-red-100 border-l-4 border-red-500 p-4 mb-6 flex items-start space-x-3 rounded-lg">
+                <i class="fas fa-exclamation-triangle text-red-600 text-xl mt-1"></i>
+                <div>
+                    <h4 class="font-bold text-red-800">Ponto de Atenção Crítico (Montagens):</h4>
+                    <p class="text-red-700">A gestão dos registros financeiros de montagem é feita <span class="font-bold">EXCLUSIVAMENTE no AppSheet</span>. Qualquer atualização de valores, formas de pagamento, datas ou status de um lançamento que se originou no AppSheet deve ser feita no AppSheet, e <span class="font-bold">não diretamente no Omie</span>. A integração se encarregará de espelhar a informação correta no ERP.</p>
+                </div>
+            </div>
+
+            <h3 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Fluxo 1: Movimentações de MONTAGEM (Via <span class="text-cyan-600">AppSheet</span>)</h3>
+            <p class="text-gray-700 mb-4">O lançamento no AppSheet é dividido em dois processos principais, dependendo se estamos registrando uma despesa (Saída) ou uma receita (Entrada).</p>
+
+            <!-- 2.1.2 Lançando uma Receita (CONCEITO: ENTRADA) - Usando Details/Summary -->
+            <details id="submodulo-2-1" class="submodule-expander">
+                <summary class="flex justify-between items-center">
+                     <!-- Checkbox de Conclusão - Adicionado flex-1 -->
+                    <span class="flex items-center space-x-3 flex-1">
+                        <input type="checkbox" 
+                            class="submodule-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                            data-module-id="modulo2"
+                            data-submodule-id="submodulo-2-1"
+                            data-is-main-module="true"
+                            onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);">
+                        <!-- Título corrigido: Removido "1.2" -->
+                        <span class="text-xl font-semibold text-gray-800">Lançando uma Receita (CONCEITO: ENTRADA)</span>
+                    </span>
+                    <!-- Seta Dinâmica (Ícone) - Movido para o final -->
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div>
+                    <ol class="list-decimal list-inside space-y-3 text-gray-700 ol-fluxo-sequencial">
+                        <li class="font-bold text-green-600">🟢 PASSO 1 → Acesse o Projeto:</li>
+                        <p class="ml-6">No <span class="font-bold text-cyan-600">AppSheet</span>, navegue até o projeto de montagem específico.</p>
+                        
+                        <li class="font-bold text-yellow-600">🟡 PASSO 2 → Inicie o Lançamento:</li>
+                        <p class="ml-6">Clique no ícone <span class="font-bold">"+ Financeiro"</span>.</p>
+                        
+                        <li class="font-bold text-red-600">🔴 PASSO 3 → Selecione o Conceito:</li>
+                        <p class="ml-6">Escolha a opção <span class="font-bold">ENTRADA</span>.</p>
+                        
+                        <li class="font-bold text-dark-quality">⚫ PASSO 4 → Detalhe a Movimentação (Seleção do TIPO DE MOVIMENTO):</li>
+                        <p class="ml-6 mb-2">Selecione o <span class="font-bold">TIPO DE MOVIMENTO</span> que corresponde à cobrança a ser feita. O sistema emitirá a documentação correspondente (<span class="font-bold">NFSe e/ou Conta a Receber no Omie</span>).</p>
+                        <ul class="list-disc ml-10 space-y-1 text-sm">
+                            <li><span class="font-bold">Receita de projeto inicial:</span> Para a cobrança inicial que formaliza o projeto com o franqueado. O gatilho é uma notificação automática por e-mail para <span class="font-mono bg-gray-100 p-0.5 rounded">financeiro@...</span> com o valor a ser cobrado.</li>
+                            <li><span class="font-bold">Adiantamento de Clientes:</span> Para receber dinheiro dos franqueados referente a orçamentos (ex: 70%/30%). O gatilho é a conclusão da "Apresentação Financeira" do orçamento. O <span class="font-bold text-cyan-600">AppSheet</span> limita o valor máximo a ser cobrado ao valor total do orçamento.</li>
+                            <li><span class="font-bold">Receita por liberação:</span> Para cobrança de multas de montagem liberada ou "rebates" recebidos da Execução Artecenter.</li>
+                            <li><span class="font-bold">Comissão de montagens:</span> Para as comissões geradas pela venda de produtos/serviços de fornecedores. Os gatilhos são o ícone <i class="fas fa-briefcase text-red-500"></i> no Dashboard e o relatório "Repasses para fazer".</li>
+                        </ul>
+                        <div class="bg-gray-100 p-3 mt-2 mb-4 rounded-lg ml-6">
+                            <p class="text-sm font-semibold text-gray-800">Nota Importante:</p>
+                            <p class="text-xs text-gray-600">O analista não precisa se preocupar em "adivinhar" qual tipo de receita lançar. O AppSheet é <span class="font-bold">inteligente</span> e, dependendo do estágio do projeto e das informações já lançadas, ele mesmo evita que a opção errada seja usada.</p>
+                        </div>
+
+                        <li class="font-bold text-dark-quality">⚫ PASSO 5 → Confira o Resumo:</li>
+                        <p class="ml-6">Verifique <span class="font-bold">todos os dados</span> antes de salvar.</p>
+
+                        <li class="font-bold text-dark-quality">⚫ PASSO 6 → Salve e Monitore a Integração:</li>
+                        <p class="ml-6">Aguarde o retorno dos links e documentos do <span class="font-bold text-orange-600">Omie</span> para o <span class="font-bold text-cyan-600">AppSheet</span>.</p>
+
+                        <li class="font-bold text-dark-quality">⚫ PASSO 7 → Ação do Analista:</li>
+                        <p class="ml-6">Confira os documentos e <span class="font-bold">envie ao destinatário</span>.</p>
+
+                        <li class="font-bold text-dark-quality">⚫ PASSO 8 → Acompanhamento do Status (Evolução em 3 Etapas):</li>
+                        <ul class="list-disc ml-10 space-y-1 text-sm">
+                            <li><span class="font-bold">Criado:</span> Imediatamente após o registro ser salvo no <span class="font-bold text-cyan-600">AppSheet</span>.</li>
+                            <li><span class="font-bold">Pendente:</span> Quando a integração com o <span class="font-bold text-orange-600">Omie</span> confirma que a conta a pagar/receber foi lançada com sucesso no ERP.</li>
+                            <li><span class="font-extrabold text-green-600">Finalizado:</span> Quando a baixa do registro (pagamento ou recebimento) é confirmada pela conciliação via <span class="font-bold text-orange-600">Omie-Cash</span>. "<span class="font-bold">Finalizado</span>" significa que a transação financeira foi concluída.</li>
+                        </ul>
+                    </ol>
+                </div>
+            </details>
+
+            <h3 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2 pt-4">Fluxo 2: Movimentações de NÃO MONTAGEM (Via <span class="text-orange-600">Omie ERP</span>)</h3>
+
+            <!-- Para Contas a Receber (Inclusão Manual) - Usando Details/Summary -->
+            <details id="submodulo-2-2" class="submodule-expander">
+                <summary class="flex justify-between items-center">
+                     <!-- Checkbox de Conclusão - Adicionado flex-1 -->
+                    <span class="flex items-center space-x-3 flex-1">
+                        <input type="checkbox" 
+                            class="submodule-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                            data-module-id="modulo2"
+                            data-submodule-id="submodulo-2-2"
+                            data-is-main-module="true"
+                            onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);">
+                        <span class="text-xl font-semibold text-gray-800">Para Contas a Receber (Inclusão Manual)</span>
+                    </span>
+                    <!-- Seta Dinâmica (Ícone) - Movido para o final -->
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div>
+                    <!-- Quando usar -->
+                    <div class="bg-gray-50 border-l-4 border-gray-200 p-4 mb-4">
+                        <p class="font-bold text-gray-800 mb-1">Quando usar:</p>
+                        <p class="text-gray-700 text-sm">Para todas as despesas e receitas administrativas e operacionais da Quality que <span class="font-bold">não são de um projeto específico</span> (Ex: aluguel do escritório, salários, compra de material de escritório, etc.).</p>
+                        <p class="font-bold text-gray-800 mt-2">Sistema de Origem: <span class="text-orange-600">Omie ERP</span>.</p>
+                    </div>
+
+                    <h4 class="text-lg font-bold text-dark-quality mb-4">Fluxo de Inclusão Manual:</h4>
+                    <ol class="list-decimal list-inside space-y-3 text-gray-700 ol-fluxo-sequencial">
+                        <li class="font-bold text-green-600">🟢 PASSO 1 → Acesse o <span class="text-orange-600">Omie</span>:</li>
+                        <p class="ml-6">Faça o login <span class="font-bold">diretamente na plataforma Omie</span>.</p>
+                        
+                        <li class="font-bold text-yellow-600">🟡 PASSO 2 → Navegue:</li>
+                        <p class="ml-6">Vá para o módulo <span class="font-bold">"Finanças"</span> e selecione a opção <span class="font-bold">"Contas a Receber"</span> [<span class="font-mono">00:00:23 do vídeo de Contas a Receber</span>].</p>
+                        
+                        <li class="font-bold text-red-600">🔴 PASSO 3 → Inicie o Lançamento:</li>
+                        <p class="ml-6">Clique em <span class="font-bold">"Inserção Manual"</span> [<span class="font-mono">00:00:27 do vídeo de Contas a Receber</span>].</p>
+                        
+                        <li class="font-bold text-dark-quality">⚫ PASSO 4 → Preencha os Dados Principais:</li>
+                        <ul class="list-disc ml-10 space-y-1 text-sm">
+                            <li><span class="font-bold">Indique o Cliente:</span> Inclua o nome, busque na lupa ou cadastre um novo [<span class="font-mono">00:00:37</span>].</li>
+                            <li><span class="font-bold">Data de Vencimento:</span> Data que define o vencimento do título [<span class="font-mono">00:00:44</span>].</li>
+                            <li><span class="font-bold">Valor da Conta:</span> [<span class="font-mono">00:00:49</span>].</li>
+                            <li><span class="font-bold">Classificação da Receita:</span> Essencial para o DRE e fluxo de caixa [<span class="font-mono">00:00:52</span>].</li>
+                            <li><span class="font-bold">Previsão de Recebimento:</span> Data negociada com o cliente [<span class="font-mono">00:01:00</span>].</li>
+                            <li><span class="font-bold">Conta Corrente:</span> Indique a conta onde o recebimento será feito [<span class="font-mono">00:01:04</span>].</li>
+                        </ul>
+
+                        <li class="font-bold text-dark-quality">⚫ PASSO 5 → Preencha as Abas Adicionais:</li>
+                        <p class="ml-6">Use as abas <span class="font-bold">(Detalhes, Impostos Retidos, Departamentos, Repetição, Recebimento, Diversos)</span> para detalhar o lançamento conforme necessidade [<span class="font-mono">00:01:29 - 00:03:10 do vídeo de Contas a Receber</span>].</p>
+                        
+                        <li class="font-bold text-dark-quality">⚫ PASSO 6 → Salve:</li>
+                        <p class="ml-6">Clique em <span class="font-bold">salvar</span> para cadastrar a conta a receber [<span class="font-mono">00:03:30 do vídeo de Contas a Receber</span>].</p>
+                    </ol>
+                    <!-- Link de Treinamento Omie Revertido -->
+                    <div class="bg-white p-4 rounded-xl shadow-md mt-6 border border-orange-200">
+                        <p class="font-bold text-lg text-orange-700 mb-3 flex items-center">
+                            <i class="fas fa-video mr-2"></i> Vídeo Aula: Cadastro de Conta a Receber (00:05:54)
+                        </p>
+                        <a href="http://www.youtube.com/watch?v=5hTuXnSeN48" target="_blank" class="anchor-link font-semibold text-sm hover:text-orange-600 transition-colors">
+                            Acessar Treinamento Omie (Clique Aqui)
+                        </a>
+                    </div>
+                </div>
+            </details>
+        </section>
+
+        <!-- Módulo 3 -->
+        <section id="modulo3" class="mb-12">
+            <!-- As barras de progresso modular foram movidas para a sidebar -->
+            <!-- Título do Módulo 3 CORRIGIDO -->
+            <h2 class="text-3xl font-bold text-dark-quality mb-2">Módulo 3: O Ciclo de PAGAMENTOS (Como o Dinheiro Sai, com Controle)</h2>
+            <p class="text-gray-700 mb-6">Propósito: Detalhar a rotina de pagamentos, garantindo <span class="font-bold">controle, aprovações e eficiência</span>.</p>
+
+            <!-- Princípio Fundamental -->
+            <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-6 flex items-start space-x-3 rounded-lg">
+                <i class="fas fa-lightbulb text-yellow-600 text-xl mt-1"></i>
+                <div>
+                    <h4 class="font-bold text-yellow-800">Princípio Fundamental:</h4>
+                    <p class="text-yellow-700">A gestão de pagamentos na Quality é um ciclo que se move da identificação para o agendamento, da aprovação para a execução automatizada. O objetivo é garantir <span class="font-bold">controle, pontualidade e eficiência</span> em cada etapa, utilizando o <span class="font-bold text-orange-600">Omie.Cash</span> como centro da operação.</p>
+                </div>
+            </div>
+
+            <h3 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Fluxo 1: Movimentações de MONTAGEM (Via <span class="text-cyan-600">AppSheet</span>)</h3>
+
+            <!-- 3.1.1 Lançando uma Despesa (CONCEITO: SAÍDA) - Usando Details/Summary -->
+            <details id="submodulo-3-1" class="submodule-expander">
+                <summary class="flex justify-between items-center">
+                     <!-- Checkbox de Conclusão - Adicionado flex-1 -->
+                    <span class="flex items-center space-x-3 flex-1">
+                        <input type="checkbox" 
+                            class="submodule-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                            data-module-id="modulo3"
+                            data-submodule-id="submodulo-3-1"
+                            data-is-main-module="true"
+                            onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);">
+                        <!-- Título corrigido: Removido "1.1" -->
+                        <span class="text-xl font-semibold text-gray-800">Lançando uma Despesa (CONCEITO: SAÍDA)</span>
+                    </span>
+                    <!-- Seta Dinâmica (Ícone) - Movido para o final -->
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div>
+                    <ol class="list-decimal list-inside space-y-3 text-gray-700 ol-fluxo-sequencial">
+                        <li class="font-bold text-green-600">🟢 PASSO 1 → Acesse o Projeto:</li>
+                        <p class="ml-6">No <span class="font-bold text-cyan-600">AppSheet</span>, navegue até o projeto de montagem específico.</p>
+                        
+                        <li class="font-bold text-yellow-600">🟡 PASSO 2 → Inicie o Lançamento:</li>
+                        <p class="ml-6">Clique no ícone <span class="font-bold">"+ Financeiro"</span>.</p>
+                        
+                        <li class="font-bold text-red-600">🔴 PASSO 3 → Selecione o Conceito:</li>
+                        <p class="ml-6">Escolha a opção <span class="font-bold">SAÍDA</span>.</p>
+                        
+                        <li class="font-bold text-dark-quality">⚫ PASSO 4 → Detalhe a Movimentação (Seleção do TIPO DE MOVIMENTO):</li>
+                        <p class="ml-6 mb-2">Selecione o <span class="font-bold">TIPO DE MOVIMENTO</span> apropriado:</p>
+                        <ul class="list-disc ml-10 space-y-1 text-sm">
+                            <li><span class="font-bold">REPASSE A FORNECEDORES</span> (Para adiantamentos da produção com o dinheiro do franqueado).</li>
+                            <li><span class="font-bold">COMPRA PROJETOS INICIAIS</span> (Para pagamento dos arquitetos).</li>
+                            <li><span class="font-bold">DESPESA GERAL DA MONTAGEM</span> (Para imprevistos e outros custos do projeto).</li>
+                        </ul>
+                        <p class="ml-6 mt-2"><span class="font-bold">Preencha os Campos:</span> Siga os campos guiados que o sistema apresentará para cada tipo de movimento.</p>
+
+                        <li class="font-bold text-dark-quality">⚫ PASSO 5 → Confira o Resumo:</li>
+                        <p class="ml-6">Verifique <span class="font-bold">todos os dados</span> antes de salvar.</p>
+
+                        <li class="font-bold text-dark-quality">⚫ PASSO 6 → Salve e Monitore a Integração:</li>
+                        <p class="ml-6">Aguarde o retorno dos links e documentos do <span class="font-bold text-orange-600">Omie</span> para o <span class="font-bold text-cyan-600">AppSheet</span>.</p>
+
+                        <li class="font-bold text-dark-quality">⚫ PASSO 7 → Ação do Analista:</li>
+                        <p class="ml-6">Confira os documentos e envie ao destinatário.</p>
+
+                        <li class="font-bold text-dark-quality">⚫ PASSO 8 → Acompanhamento do Status (Evolução em 3 Etapas - Idêntico ao Recebimento):</li>
+                        <ul class="list-disc ml-10 space-y-1 text-sm">
+                            <li><span class="font-bold">Criado:</span> Imediatamente após o registro ser salvo no <span class="font-bold text-cyan-600">AppSheet</span>.</li>
+                            <li><span class="font-bold">Pendente:</span> Quando a integração com o <span class="font-bold text-orange-600">Omie</span> confirma que a conta a pagar/receber foi lançada com sucesso no ERP.</li>
+                            <li><span class="font-extrabold text-green-600">Finalizado:</span> Quando a baixa do registro (pagamento ou recebimento) é confirmada pela conciliação via <span class="font-bold text-orange-600">Omie-Cash</span>. "<span class="font-bold">Finalizado</span>" significa que a transação financeira foi concluída.</li>
+                        </ul>
+                    </ol>
+                </div>
+            </details>
+            
+            <h3 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2 pt-4">Fluxo 2: Movimentações de NÃO MONTAGEM (Via <span class="text-orange-600">Omie ERP</span>)</h3>
+
+            <!-- Para Contas a Pagar (Inclusão Manual) - Usando Details/Summary -->
+            <details id="submodulo-3-2" class="submodule-expander">
+                <summary class="flex justify-between items-center">
+                     <!-- Checkbox de Conclusão - Adicionado flex-1 -->
+                    <span class="flex items-center space-x-3 flex-1">
+                        <input type="checkbox" 
+                            class="submodule-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                            data-module-id="modulo3"
+                            data-submodule-id="submodulo-3-2"
+                            data-is-main-module="true"
+                            onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);">
+                        <span class="text-xl font-semibold text-gray-800">Para Contas a Pagar (Inclusão Manual)</span>
+                    </span>
+                    <!-- Seta Dinâmica (Ícone) - Movido para o final -->
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div>
+                    <h4 class="text-xl font-bold text-dark-quality mb-4">Fluxo de Inclusão Manual:</h4>
+                    <ol class="list-decimal list-inside space-y-3 text-gray-700 ol-fluxo-sequencial">
+                        <li class="font-bold text-green-600">🟢 PASSO 1 → Acesse o <span class="text-orange-600">Omie</span>:</li>
+                        <p class="ml-6">Faça o login <span class="font-bold">diretamente na plataforma Omie</span>.</p>
+                        
+                        <li class="font-bold text-yellow-600">🟡 PASSO 2 → Navegue:</li>
+                        <p class="ml-6">Vá para o módulo <span class="font-bold">"Finanças"</span> e clique em <span class="font-bold">"Cadastrar Contas a Pagar"</span> [<span class="font-mono">00:00:13 do vídeo de Contas a Pagar</span>].</p>
+                        
+                        <li class="font-bold text-red-600">🔴 PASSO 3 → Inicie o Lançamento:</li>
+                        <p class="ml-6">Clique em <span class="font-bold">"Inserção Manual"</span> [<span class="font-mono">00:00:21 do vídeo de Contas a Pagar</span>].</p>
+                        
+                        <li class="font-bold text-dark-quality">⚫ PASSO 4 → Preencha os Dados Principais:</li>
+                        <ul class="list-disc ml-10 space-y-1 text-sm">
+                            <li><span class="font-bold">Indique o Favorecido/Fornecedor:</span> Inclua o nome ou busque na lupa. Se não existir, clique para cadastrar um novo [<span class="font-mono">00:00:26 do vídeo de Contas a Pagar</span>].</li>
+                            <li><span class="font-bold">Data de Vencimento:</span> Data que define o vencimento do título [<span class="font-mono">00:00:38 do vídeo de Contas a Pagar</span>].</li>
+                            <li><span class="font-bold">Valor:</span> [<span class="font-mono">00:00:45 do vídeo de Contas a Pagar</span>].</li>
+                            <li><span class="font-bold">Categorize:</span> Essencial para reflexão no fluxo de caixa [<span class="font-mono">00:00:46 do vídeo de Contas a Pagar</span>].</li>
+                            <li><span class="font-bold">Previsão de Pagamento:</span> Data negociada com o fornecedor [<span class="font-mono">00:00:55 do vídeo de Contas a Pagar</span>].</li>
+                            <li><span class="font-bold">Conta Corrente:</span> Indique a conta de onde será feito o pagamento [<span class="font-mono">00:00:59 do vídeo de Contas a Pagar</span>].</li>
+                        </ul>
+
+                        <li class="font-bold text-dark-quality">⚫ PASSO 5 → Preencha as Abas Adicionais:</li>
+                        <p class="ml-6">Use as abas <span class="font-bold">(Detalhes, Impostos Retidos, Departamentos, Repetição, Pagamento, Integração Bancária, Diversos)</span> para detalhar o lançamento [<span class="font-mono">00:01:07 - 00:03:00 do vídeo de Contas a Pagar</span>].</p>
+                        
+                        <li class="font-bold text-dark-quality">⚫ PASSO 6 → Salve:</li>
+                        <p class="ml-6">Clique em <span class="font-bold">salvar</span> para criar a conta a pagar [<span class="font-mono">00:03:17 do vídeo de Contas a Pagar</span>].</p>
+                    </ol>
+                    <!-- Link de Treinamento Omie Revertido -->
+                    <div class="bg-white p-4 rounded-xl shadow-md mt-6 border border-orange-200">
+                        <p class="font-bold text-lg text-orange-700 mb-3 flex items-center">
+                            <i class="fas fa-video mr-2"></i> Vídeo Aula: Cadastro de Conta a Pagar (00:05:40)
+                        </p>
+                        <a href="http://www.youtube.com/watch?v=ctLHnM4r3KM" target="_blank" class="anchor-link font-semibold text-sm hover:text-orange-600 transition-colors">
+                            Acessar Treinamento Omie (Clique Aqui)
+                        </a>
+                    </div>
+                </div>
+            </details>
+
+            <!-- 3.3 - Rotina de Aprovação e Execução de Pagamentos (O Ciclo Semanal) - Usando Details/Summary -->
+            <details id="submodulo-3-3" class="submodule-expander">
+                <summary class="flex justify-between items-center">
+                     <!-- Checkbox de Conclusão - Adicionado flex-1 -->
+                    <span class="flex items-center space-x-3 flex-1">
+                        <input type="checkbox" 
+                            class="submodule-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                            data-module-id="modulo3"
+                            data-submodule-id="submodulo-3-3"
+                            data-is-main-module="true"
+                            onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);">
+                        <!-- Título corrigido: Removido "3.3" e alterado para "3.1" -->
+                        <span class="text-xl font-semibold text-gray-800">3.1 - Rotina de Aprovação e Execução de Pagamentos (O Ciclo Semanal)</span>
+                    </span>
+                    <!-- Seta Dinâmica (Ícone) - Movido para o final -->
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div>
+                    <p class="text-lg font-bold text-dark-quality mb-2">Dias Oficiais: <span class="font-bold text-green-600">Terça-feira</span> e <span class="font-bold text-green-600">Sexta-feira</span>.</p>
+                    <p class="text-red-600 font-bold mb-4">Exceção Crítica: Pagamentos de montagem devem ser <span class="font-bold">oportunos</span> para nunca atrasar o avanço do projeto.</p>
+
+                    <h5 class="font-bold text-gray-800 mb-2 border-b">1. Preparação e Agendamento (Antes da Aprovação):</h5>
+                    <ul class="list-disc ml-6 space-y-2 text-gray-700 mb-4">
+                        <li><span class="font-bold">Auditoria Prévia (Responsabilidade do Analista):</span> Para cada conta a ser paga, o analista deve <span class="font-bold">auditar a veracidade da cobrança</span>, a correção dos dados e a data de vencimento.</li>
+                    </ul>
+
+                    <h6 class="font-semibold text-gray-700 mb-2 ml-4">Agendamento dos Pagamentos no <span class="text-orange-600">Omie</span>:</h6>
+                    <ol class="list-decimal list-inside ml-8 space-y-2 text-sm text-gray-700">
+                        <li><span class="font-bold">Acesse o Painel:</span> No Módulo de Finanças do Omie, vá para a tela <span class="font-bold">Resumo</span>.</li>
+                        <li><span class="font-bold">Identifique os Pagamentos:</span> Localize a área vermelha <span class="font-bold">"PAGAR HOJE"</span>. Ali estarão todas as contas com vencimento no dia ou em atraso. Clique no valor total para ver o detalhe.</li>
+                        <li><span class="font-bold">Atualize Vencimentos:</span> Se houver pagamentos com datas atrasadas, a primeira ação é <span class="font-bold">atualizar a data de vencimento para o dia do pagamento</span> (hoje).</li>
+                        <li><span class="font-bold">Selecione as Contas:</span> Marque o checkbox na primeira coluna de todas as contas que foram auditadas e estão prontas para pagamento.</li>
+                        <li><span class="font-bold">Pré-agende para Autorização:</span> Clique no botão <span class="font-bold">"Pagar ou Agendar Agora"</span> e siga as instruções do sistema. Esta ação não paga a conta imediatamente, mas a deixa pré-agendada no <span class="font-bold text-orange-600">Omie.Cash</span>, aguardando a <span class="font-bold">autorização final da diretoria</span>.</li>
+                    </ol>
+
+                    <!-- ITEM DE FLUXO REORDENADO AQUI -->
+                    <ul class="list-disc ml-6 space-y-2 text-gray-700 mb-4 mt-4">
+                        <li><span class="font-bold">Geração dos Relatórios para Aprovação:</span> Com os pagamentos já pré-agendados no sistema, o analista gera os relatórios que servirão como <span class="font-bold">dossiê físico para as assinaturas</span>.</li>
+                    </ul>
+
+                    <h6 class="font-semibold text-gray-700 mb-2 ml-4">Relatórios Necessários:</h6>
+                    <ul class="list-disc ml-10 space-y-1 text-sm text-gray-700">
+                        <li><span class="font-bold">Relatório de Montagem (<span class="text-cyan-600">AppSheet</span>):</span> Acesse o relatório "Repasses para fazer" (<span class="font-mono bg-gray-100 p-0.5 rounded">Admin > Mix > Relatórios</span>).</li>
+                        <li><span class="font-bold">Relatório Geral (<span class="text-orange-600">Omie</span>):</span> Gere o relatório "Contas a Pagar Dinâmica" (<span class="font-mono bg-gray-100 p-0.5 rounded">Finanças > Meus Relatórios</span>).</li>
+                    </ul>
+                    
+                    <h5 class="font-bold text-gray-800 mb-2 border-b pt-4">2. Fluxo de Aprovação Formal:</h5>
+                    <div class="bg-red-50 border border-red-200 p-3 mb-4 rounded-lg">
+                        <p class="font-bold text-red-700"><i class="fas fa-exclamation-triangle mr-2"></i> REGRA: <span class="font-bold">Nenhum pagamento é realizado sem as assinaturas de validação.</span></p>
+                    </div>
+                    <ul class="list-decimal list-inside ml-6 space-y-2 text-gray-700">
+                        <li><span class="font-bold">Validação Gerencial (Gerente de Montagens):</span>
+                            <ul class="list-disc ml-6 space-y-1 text-sm">
+                                <li>O relatório "Repasses para fazer" (<span class="text-cyan-600">AppSheet</span>) deve ser <span class="font-bold">impresso, verificado e assinado</span> pelo Gerente de Montagens.</li>
+                                <!-- Linha expandida com o texto completo solicitado -->
+                                <li>O relatório "Contas a Pagar Dinâmica" (do Omie) também deve ser revisado por ele. SE o relatório do Omie contiver qualquer valor referente a montagens, ele <span class="font-bold">TAMBÉM deve ser assinado</span> pelo Gerente de Montagens.</li>
+                            </ul>
+                        </li>
+                        <li><span class="font-bold">Autorização Final (Diretoria):</span>
+                            <p class="ml-6 text-sm">Após a validação do Gerente de Montagens, ambos os relatórios são apresentados à Diretoria (Sr. Robinson) para a <span class="font-bold">autorização final de pagamento</span>.</p>
+                        </li>
+                    </ul>
+
+                    <h5 class="font-bold text-gray-800 mb-2 border-b pt-4">3. Execução e Conciliação (A Mágica da Automação):</h5>
+                    <ul class="list-disc ml-6 space-y-2 text-gray-700">
+                        <li><span class="font-bold">Execução dos Pagamentos:</span> Uma vez que a diretoria aprova os pagamentos agendados dentro do <span class="font-bold text-orange-600">Omie.Cash</span>, o sistema se encarrega de efetuar as transferências.</li>
+                        <li><span class="font-bold">Baixa e Conciliação Automática:</span> Esta é a grande vantagem do <span class="font-bold text-orange-600">Omie.Cash</span>. O processo é <span class="font-bold">100% automatizado</span>:
+                            <ul class="list-disc ml-6 space-y-1 text-sm">
+                                <li>Dá baixa na conta a pagar dentro do Omie.</li>
+                                <li>Realiza a conciliação bancária.</li>
+                                <li>(Para pagamentos de montagem) Envia a confirmação para o <span class="text-cyan-600">AppSheet</span>, que mudará o status do registro para "<span class="font-bold">Finalizado</span>".</li>
+                            </ul>
+                        </li>
+                        <li class="font-bold text-green-600">Intervenção Manual: <span class="font-bold">Nenhuma</span>.</li>
+                    </ul>
+                </div>
+            </details>
+        </section>
+
+        <!-- Módulo 4 -->
+        <section id="modulo4" class="mb-12">
+            <!-- As barras de progresso modular foram movidas para a sidebar -->
+            <h2 class="text-3xl font-bold text-dark-quality mb-2">Módulo 4: Tarefas de Interface e Rotinas Administrativas</h2>
+            <p class="text-gray-700 mb-6">Propósito: Detalhar os processos cíclicos que garantem a <span class="font-bold">sincronia entre o financeiro</span>, as outras áreas da empresa (Supply, RH), os parceiros externos (fornecedores, contabilidade) e os clientes (franqueados).</p>
+
+            <!-- 4.1 - Apuração e Faturamento das Comissões de Insumos -->
+            <details id="submodulo-4-1" class="submodule-expander">
+                <summary class="flex justify-between items-center">
+                     <!-- Checkbox de Conclusão - Adicionado flex-1 -->
+                    <span class="flex items-center space-x-3 flex-1">
+                        <input type="checkbox" 
+                            class="submodule-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                            data-module-id="modulo4"
+                            data-submodule-id="submodulo-4-1"
+                            data-is-main-module="true"
+                            onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);">
+                        <span class="text-xl font-semibold text-gray-800">4.1 - Apuração e Faturamento das Comissões de Insumos</span>
+                    </span>
+                    <!-- Seta Dinâmica (Ícone) - Movido para o final -->
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div>
+                    <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4 flex items-start space-x-3 rounded-lg">
+                        <i class="fas fa-lightbulb text-yellow-600 text-xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold text-yellow-800">Princípio Fundamental:</h4>
+                            <p class="text-yellow-700">A Quality tem direito a uma comissão sobre as vendas de insumos realizadas pelos nossos fornecedores parceiros. A responsabilidade do financeiro é <span class="font-bold">auditar 100% dessas vendas</span>, garantir a precisão dos valores e faturar a comissão correta, maximizando a receita da empresa.</p>
+                        </div>
+                    </div>
+
+                    <div class="list-disc ml-6 space-y-1 text-sm">
+                        <p class="font-semibold text-gray-700">Frequência: <span class="font-bold text-dark-quality">Mensal.</span></p>
+                        <p class="font-semibold text-gray-700">Prazo de Execução: <span class="font-bold text-red-600">Entre os dias 03 e 05 de cada mês</span> (referente às vendas do mês anterior).</p>
+                        <p class="font-semibold text-gray-700">Ferramenta Central: Planilha <span class="font-bold">"Controle de Comissões - Fornecedores"</span> no Google Drive.</p>
+                    </div>
+                    
+                    <h4 class="font-bold text-gray-800 mb-2 border-b">Passo a Passo do Processo:</h4>
+                    <ol class="list-decimal list-inside space-y-3 text-gray-700 ol-fluxo-sequencial">
+                        <li class="font-bold text-green-600">🟢 PASSO 1 → Coleta de Dados (<span class="font-bold">Ação Proativa</span>):</li>
+                        <ul class="list-disc ml-6 space-y-1 text-sm">
+                            <li><span class="font-bold">Contato Externo:</span> Entre os dias 03 e 05, o analista deve entrar em contato com <span class="font-bold">CADA fornecedor parceiro</span> e solicitar o relatório de vendas do mês anterior.</li>
+                            <li><span class="font-bold">Verificação Interna:</span> O analista deve acessar a planilha "Controle de Comissões" (alimentada pelo Supply) que tem uma aba <span class="font-bold">GERAL</span> (resumo) e abas individuais por fornecedor principal (detalhe).</li>
+                        </ul>
+
+                        <li class="font-bold text-yellow-600">🟡 PASSO 2 → Auditoria Interna (<span class="font-bold">Primeira Verificação</span>):</li>
+                        <p class="ml-6">Antes de comparar com os dados do fornecedor, o analista deve <span class="font-bold">auditar a planilha interna</span>. Assegure que todos os produtos estejam gerando a comissão certa, referente às vendas reportadas no Yungas.</p>
+
+                        <li class="font-bold text-red-600">🔴 PASSO 3 → Conferência e Análise de Divergências:</li>
+                        <p class="ml-6 mb-2">Realize a comparação mês com mês, seguindo o critério:</p>
+                        <ul class="list-disc ml-10 space-y-1 text-sm">
+                            <li><span class="font-bold">Cenário A: Valor do Fornecedor é MAIOR que o nosso valor.</span>
+                                <ul class="list-circle ml-6">
+                                    <li>Se ainda estiver maior o valor do fornecedor, então <span class="font-bold">pode emitir a NFSe com o valor do fornecedor</span>.</li>
+                                </ul>
+                            </li>
+                            <li><span class="font-bold">Cenário B: Nosso valor é MAIOR que o valor do fornecedor.</span>
+                                <ul class="list-circle ml-6">
+                                    <li>O financeiro deve fazer <span class="font-bold">cálculo dos últimos três meses</span> de cada lado para ver qual valor é maior. Se o nosso ainda for maior, o financeiro deve <span class="font-bold">revisar em detalhe as vendas</span>.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <div class="bg-gray-100 p-3 mt-2 mb-2 rounded-lg ml-6">
+                            <p class="text-sm font-semibold text-gray-800">Causa Comum (Divergência):</p>
+                            <p class="text-xs text-gray-600">Pedidos feitos no último dia do mês e faturados pelo fornecedor no mês seguinte (divergência de data: pedido vs. faturamento).</p>
+                        </div>
+                        <p class="ml-6 mt-2">Se a divergência for explicada e conciliada, <span class="font-bold">emita a NFSe pelo valor correto</span>.</p>
+
+                        <li class="font-bold text-dark-quality">⚫ PASSO 4 → Escalonamento:</li>
+                        <p class="ml-6">Se não conseguir achar e explicar a divergência, deve conferir com a <span class="font-bold">Diretoria</span>.</p>
+                    </ol>
+                </div>
+            </details>
+
+            <!-- 4.2 - Verificação Financeira de Projetos Finalizados -->
+            <details id="submodulo-4-2" class="submodule-expander">
+                <summary class="flex justify-between items-center">
+                     <!-- Checkbox de Conclusão - Adicionado flex-1 -->
+                    <span class="flex items-center space-x-3 flex-1">
+                        <input type="checkbox" 
+                            class="submodule-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                            data-module-id="modulo4"
+                            data-submodule-id="submodulo-4-2"
+                            data-is-main-module="true"
+                            onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);">
+                        <span class="text-xl font-semibold text-gray-800">4.2 - Verificação Financeira de Projetos Finalizados</span>
+                    </span>
+                    <!-- Seta Dinâmica (Ícone) - Movido para o final -->
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div>
+                    <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4 flex items-start space-x-3 rounded-lg">
+                        <i class="fas fa-lightbulb text-yellow-600 text-xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold text-yellow-800">Princípio Fundamental:</h4>
+                            <p class="text-yellow-700">O objetivo é garantir que todos os lançamentos (<span class="font-bold">receitas e despesas</span>) registrados no <span class="font-bold text-cyan-600">AppSheet</span> foram corretamente processados no <span class="font-bold text-orange-600">Omie</span> e estão <span class="font-bold">100% conciliados</span> com o que foi programado.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between text-sm mb-4">
+                        <p class="font-semibold text-gray-700">Frequência: <span class="font-bold text-dark-quality">Mensal.</span></p>
+                        <p class="font-semibold text-gray-700">Prazo de Entrega: O relatório final assinado deve ser entregue à diretoria <span class="font-bold text-red-600">até o dia 05 de cada mês</span>.</p>
+                    </div>
+                    
+                    <h4 class="font-bold text-gray-800 mb-2 border-b">Passo a Passo do Processo:</h4>
+
+                    <ol class="list-decimal list-inside space-y-4 text-gray-700 ol-fluxo-sequencial">
+                        <li class="font-bold text-green-600">🟢 Etapa 1: Geração do Relatório de Conferência</li>
+                        <ul class="list-disc ml-6 space-y-1 text-sm">
+                            <li><span class="font-bold">Acesse o <span class="text-cyan-600">AppSheet</span>:</span> Vá para a área Admin e entre no módulo Relatórios.</li>
+                            <li><span class="font-bold">Selecione o Relatório:</span> Escolha o relatório chamado <span class="font-bold">"Conferência financeira"</span>.</li>
+                            <li><span class="font-bold">Receba o Documento:</span> O relatório será gerado em formato PDF e enviado automaticamente para o e-mail <span class="font-mono bg-gray-100 p-0.5 rounded">financeiro@....</span></li>
+                        </ul>
+
+                        <li class="font-bold text-yellow-600">🟡 Etapa 2: Auditoria e Preenchimento (Cruzamento de Dados AppSheet vs. Omie)</li>
+                        <p class="ml-6">O analista deve <span class="font-bold">auditar cada uma das 6 seções</span>, preenchendo o documento com as informações confirmadas do <span class="font-bold text-orange-600">Omie</span> (como número da NF) e validando os valores.</p>
+                        
+                        <div class="ml-6 mt-2 p-3 bg-gray-50 rounded-lg">
+                            <h5 class="font-bold text-dark-quality mb-2">Itens de Auditoria (Regras de Ouro):</h5>
+                            <ul class="list-decimal ml-6 space-y-2 text-sm">
+                                <li><span class="font-bold">1. Serviços prestados - Acompanhamento e projeto:</span> O valor deve ter sido <span class="font-extrabold text-red-600">100% recebido</span>, <span class="font-bold">sem exceções</span>.</li>
+                                <li><span class="font-bold">2. Adiantamento de clientes:</span> Todos os valores devem ter sido <span class="font-extrabold text-red-600">100% recebidos</span> no Omie. <span class="font-bold">Não pode existir pendências</span>.</li>
+                                <li><span class="font-bold">3. Repasse a fornecedores:</span> Podem existir pendências, sendo que a Quality <span class="font-bold">retêm 10% do valor final</span>. Anote as observações.</li>
+                                <li><span class="font-bold">4. Comissão de montagens:</span> Valores a considerar são o das <span class="font-bold">NFSe emitidas, não canceladas</span>.</li>
+                                <li><span class="font-bold">5. Taxa de liberação - Montagens liberadas:</span> Para Artecenter ou Liberadas, deve ter valor e <span class="font-extrabold text-red-600">estar 100% recebido</span>.</li>
+                                <li><span class="font-bold">6. Compra projetos iniciais:</span> Auditar Contas a Pagar (Filtre por Categoria = "Compra de serviços").</li>
+                            </ul>
+                        </div>
+                        
+                        <li class="font-bold text-red-600">🔴 Etapa 3: Finalização e Reporte</li>
+                        <p class="ml-6"><span class="font-bold">Importância da Auditoria:</span> Confirmação de que tudo que foi pago e recebido está dentro do programado.</p>
+                        <ul class="list-disc ml-6 space-y-1 text-sm">
+                            <li><span class="font-bold">Documente as Observações:</span> Anote qualquer divergência ou ponto de atenção diretamente no campo de observações do PDF.</li>
+                            <li><span class="font-bold">Escalonamento de Erros:</span> Deve comunicar para a Diretoria qualquer dúvida de erro nas informações.</li>
+                            <li><span class="font-bold">Aprovação Formal:</span> Deve ser <span class="font-bold">impresso e assinado</span>, depois entregue para a diretoria <span class="font-bold">até o dia 5 de todo mês</span>.</li>
+                        </ul>
+                    </ol>
+                    <p class="text-sm text-gray-500 mt-4">Nota: Esta é uma simulação da estrutura do arquivo base do projeto. Os passos do Módulo 5 (Contábil e Análise) não estão incluídos no código base fornecido.</p>
+                </div>
+            </details>
+            
+            <!-- 4.3 - Acompanhamento e Documentação do Cronograma de Projetos no ClickUp -->
+            <details id="submodulo-4-3" class="submodule-expander">
+                <summary class="flex justify-between items-center">
+                     <!-- Checkbox de Conclusão - Adicionado flex-1 -->
+                    <span class="flex items-center space-x-3 flex-1">
+                        <input type="checkbox" 
+                            class="submodule-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                            data-module-id="modulo4"
+                            data-submodule-id="submodulo-4-3"
+                            data-is-main-module="true"
+                            onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);">
+                        <span class="text-xl font-semibold text-gray-800">4.3 - Acompanhamento e Documentação do Cronograma de Projetos no <span class="text-purple-600">ClickUp</span></span>
+                    </span>
+                    <!-- Seta Dinâmica (Ícone) - Movido para o final -->
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div>
+                    <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4 flex items-start space-x-3 rounded-lg">
+                        <i class="fas fa-lightbulb text-yellow-600 text-xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold text-yellow-800">Princípio Fundamental:</h4>
+                            <p class="text-yellow-700">O cronograma no <span class="font-bold text-purple-600">ClickUp</span> é a <span class="font-bold">"fonte da verdade"</span> para o status dos projetos. A função do financeiro é <span class="font-bold">acompanhar as tarefas, documentando</span> (status, datas, comentários) a execução realizada no AppSheet ou Omie.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-4 text-sm mb-4">
+                        <div class="p-3 bg-cyan-50 border border-cyan-200 rounded-lg">
+                            <p class="font-bold text-cyan-600">AppSheet (<span class="font-bold">Painel de Controle</span>):</p>
+                            <p class="text-gray-700">Indica a necessidade de uma ação e onde as ações financeiras de montagem são <span class="font-bold">executadas</span>.</p>
+                        </div>
+                        <div class="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                            <p class="font-bold text-purple-600">ClickUp (<span class="font-bold">Plataforma de Projeto</span>):</p>
+                            <p class="text-gray-700">Onde a ação é <span class="font-bold">documentada</span>, o status é atualizado e o histórico é registrado.</p>
+                        </div>
+                    </div>
+
+                    <h4 class="font-bold text-gray-800 mb-2 border-b">Passo a Passo da Rotina de Acompanhamento e Documentação:</h4>
+                    <ol class="list-decimal list-inside space-y-3 text-gray-700 ol-fluxo-sequencial">
+                        <li class="font-bold text-green-600">🟢 PASSO 1 → Monitoramento Diário de Alertas (<span class="text-cyan-600">AppSheet</span>):</li>
+                        <ul class="list-disc ml-6 space-y-1 text-sm">
+                            <li><span class="font-bold">Monitoramento:</span> O analista deve monitorar <span class="font-bold">diariamente</span> o Dashboard de Montagens no <span class="font-bold text-cyan-600">AppSheet</span>.</li>
+                            <li><span class="font-bold">Gatilho Visual:</span> Todas as tarefas de cor <span class="font-bold">ROXA</span> são <span class="font-bold">responsabilidade do financeiro</span>.</li>
+                        </ul>
+
+                        <li class="font-bold text-yellow-600">🟡 PASSO 2 → Execução da Ação Financeira (Fora do <span class="text-purple-600">ClickUp</span>):</li>
+                        <p class="ml-6">Ao identificar uma tarefa roxa no <span class="font-bold text-cyan-600">AppSheet</span>, o analista deve <span class="font-bold">executar a ação financeira</span> na plataforma correta (AppSheet ou Omie).</p>
+                        
+                        <li class="font-bold text-red-600">🔴 PASSO 3 → Documentação e Atualização no <span class="text-purple-600">ClickUp</span> (Pós-Execução):</li>
+                        <p class="ml-6 mb-2"><span class="font-bold">IMEDIATAMENTE DEPOIS</span> da execução da ação, deverá ser marcada como finalizada no <span class="font-bold text-purple-600">ClickUp</span>. A função do analista no ClickUp é: Atualizar Status, Datas de Vencimento, Adicionar Comentários e Anexar Documentos.</p>
+                        <p class="ml-6 mt-2 text-sm font-semibold"><span class="font-bold">O Impacto da Atualização:</span> Manter o ClickUp atualizado é <span class="font-bold">comunicação proativa</span> e garantia de visibilidade para a Diretoria.</p>
+                    </ol>
+                </div>
+            </details>
+            
+            <!-- Outras Subseções do Módulo 4 (4.4 - 4.9) - Usando Details/Summary -->
+            
+            <!-- 4.4 - Gestão da Folha de Pagamento e Benefícios -->
+            <details id="submodulo-4-4" class="submodule-expander">
+                <summary class="flex justify-between items-center">
+                     <!-- Checkbox de Conclusão - Adicionado flex-1 -->
+                    <span class="flex items-center space-x-3 flex-1">
+                        <input type="checkbox" 
+                            class="submodule-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                            data-module-id="modulo4"
+                            data-submodule-id="submodulo-4-4"
+                            data-is-main-module="true"
+                            onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);">
+                        <span class="text-xl font-semibold text-gray-800">4.4 - Gestão da Folha de Pagamento e Benefícios</span>
+                    </span>
+                    <!-- Seta Dinâmica (Ícone) - Movido para o final -->
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div>
+                    <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4 flex items-start space-x-3 rounded-lg">
+                        <i class="fas fa-lightbulb text-yellow-600 text-xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold text-yellow-800">Princípio Fundamental:</h4>
+                            <p class="text-yellow-700">O papel do financeiro é atuar como o <span class="font-bold">facilitador e auditor</span> do processo de pagamento de pessoal. A precisão das informações e a pontualidade dos pagamentos são de <span class="font-bold">responsabilidade do analista</span>.</p>
+                        </div>
+                    </div>
+
+                    <h4 class="font-bold text-gray-800 mb-2 border-b">4.4.1 - Processo da Folha de Pagamento</h4>
+                    <p class="text-sm font-semibold text-gray-700">Frequência: <span class="font-bold">Mensal</span> | Prazo de Envio: <span class="font-bold">Último dia útil</span> | Prazo de Pagamento: Até o 5º dia útil (meta: <span class="font-bold">1º dia útil</span>) | Ferramenta: <span class="text-purple-600 font-bold">ClickUp</span></p>
+
+                    <ol class="list-decimal list-inside ml-6 space-y-2 text-gray-700 text-sm mt-3">
+                        <li><span class="font-bold">Monitoramento Contínuo:</span> Manter tarefa recorrente mensal no <span class="text-purple-600 font-bold">ClickUp</span> com subtarefas. Registrar "novidades" (atestados, etc.).</li>
+                        <li><span class="font-bold">Consolidação e Envio:</span> No último dia útil, consolidar todas as "novidades" e enviar ao RH.</li>
+                        <li><span class="font-bold">Agendamento:</span> Após receber os valores finais, lançar no <span class="text-orange-600 font-bold">Omie</span> (Cat: "Pagamento de Salários") e seguir o fluxo de aprovação (Módulo 3).</li>
+                    </ol>
+                    
+                    <h4 class="font-bold text-gray-800 mb-2 border-b mt-4">4.4.2 - Gestão dos Benefícios (<span class="font-bold text-red-600">Cartão Flash</span>)</h4>
+                    <div class="grid md:grid-cols-3 gap-4 text-sm mt-3">
+                        <!-- Recarga Colaboradores -->
+                        <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p class="font-bold text-blue-800">A) Recarga Colaboradores:</p>
+                            <p>Valores: R$ 433,00 (Refeição) + R$ 500,00 (Flexível). Frequência: <span class="font-bold">Mensal</span>. Ação: Acessar a <span class="font-bold">plataforma Flash</span> e programar a recarga.</p>
+                        </div>
+                        <!-- Cartão Corporativo (Logística) -->
+                        <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p class="font-bold text-blue-800">B) Cartão Corporativo (Logística):</p>
+                            <p>Regra de Saldo: Manter R$ 600,00 (nunca < R$ 200,00). <span class="font-bold text-red-600">CRÍTICO:</span> Antes de recarregar, <span class="font-bold">AUDITAR</span> todas as despesas no <span class="text-cyan-600 font-bold">AppSheet</span> (Formulário de "Despesas").</p>
+                        </div>
+                        <!-- Vale-Transporte (VT) -->
+                        <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p class="font-bold text-blue-800">C) Recarga do Vale-Transporte (VT):</p>
+                            <p>Valor variável, exige <span class="font-bold">auditoria</span> do financeiro. Execução na plataforma Flash. Escalar divergência à Diretoria.</p>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+            <!-- 4.5 - Rotinas de Interface com RH e Onboarding -->
+            <details id="submodulo-4-5" class="submodule-expander">
+                <summary class="flex justify-between items-center">
+                     <!-- Checkbox de Conclusão - Adicionado flex-1 -->
+                    <span class="flex items-center space-x-3 flex-1">
+                        <input type="checkbox" 
+                            class="submodule-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                            data-module-id="modulo4"
+                            data-submodule-id="submodulo-4-5"
+                            data-is-main-module="true"
+                            onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);">
+                        <span class="text-xl font-semibold text-gray-800">4.5 - Rotinas de Interface com RH e Onboarding</span>
+                    </span>
+                    <!-- Seta Dinâmica (Ícone) - Movido para o final -->
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div>
+                    <h4 class="font-bold text-gray-800 mb-2 border-b">4.5.1 - Inclusão no Plano de Saúde (<span class="font-bold text-red-600">Tarefa Prioritária</span>)</h4>
+                    <p class="text-sm text-gray-700 mb-3">O processo deve ser feito de forma <span class="font-bold">prioritária</span> (Analista é a ponte) para evitar <span class="font-bold">perda de carência</span>.</p>
+                    <ol class="list-decimal list-inside ml-6 space-y-1 text-gray-700 text-sm">
+                        <li><span class="font-bold">Solicitar Formulário</span> ao gestor do plano.</li>
+                        <li>Enviar ao Colaborador.</li>
+                        <li><span class="font-bold">Coletar Documentação</span> (<span class="font-bold">pacote completo</span>).</li>
+                        <li><span class="font-bold">Enviar ao Gestor</span> para vinculação.</li>
+                    </ol>
+
+                    <h4 class="font-bold text-gray-800 mb-2 border-b mt-4">4.5.2 - Interface com a Gestão de RH (Contabilidade)</h4>
+                    <p class="text-sm text-gray-700 mb-3">Interação primariamente <span class="font-bold">reativa</span> (RH gerencia e informa o financeiro).</p>
+                    <ul class="list-disc ml-6 space-y-1 text-sm">
+                        <li><span class="font-bold">Ação Proativa:</span> Notificar o RH sobre <span class="font-bold">Novos Colaboradores</span> e enviar o consolidado de <span class="text-purple-600 font-bold">ClickUp</span> (<span class="font-bold">Eventos da Folha</span>) no último dia útil do mês.</li>
+                    </ul>
+
+                    <h4 class="font-bold text-gray-800 mb-2 border-b mt-4">4.5.3 - Gestão de Exames Admissionais e Demissionais</h4>
+                    <p class="text-sm text-gray-700 mb-3"><span class="font-bold">Financeiro inicia o processo</span>, pago via boleto.</p>
+                    <ul class="list-disc ml-6 space-y-1 text-gray-700 text-sm">
+                        <li><span class="font-bold">Ação:</span> Financeiro notifica o RH e a Empresa de Segurança no Trabalho.</li>
+                        <li><span class="font-bold">Pagamento:</span> Empresa emite boleto -> Analista lança no <span class="text-orange-600 font-bold">Omie</span> (Módulo 3).</li>
+                    </ul>
+                </div>
+            </details>
+            
+            <!-- 4.6 - Gestão de Contas Não-Automatizadas (Banco Itaú) -->
+            <details id="submodulo-4-6" class="submodule-expander">
+                <summary class="flex justify-between items-center">
+                     <!-- Checkbox de Conclusão - Adicionado flex-1 -->
+                    <span class="flex items-center space-x-3 flex-1">
+                        <input type="checkbox" 
+                            class="submodule-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                            data-module-id="modulo4"
+                            data-submodule-id="submodulo-4-6"
+                            data-is-main-module="true"
+                            onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);">
+                        <span class="text-xl font-semibold text-gray-800">4.6 - Gestão de Contas Não-Automatizadas (Banco Itaú)</span>
+                    </span>
+                    <!-- Seta Dinâmica (Ícone) - Movido para o final -->
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div>
+                    <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4 flex items-start space-x-3 rounded-lg">
+                        <i class="fas fa-lightbulb text-yellow-600 text-xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold text-yellow-800">Princípio Fundamental:</h4>
+                            <p class="text-yellow-700">Itaú (<span class="font-bold">C/C e Cartões de Crédito</span>) exige <span class="font-bold">conciliação e auditoria manual</span>, diferentemente do <span class="font-bold text-orange-600">Omie.Cash</span> (100% automatizado).</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-700 mb-3"><span class="font-bold">Uso das Contas Itaú:</span> Conta Corrente (Caixinha), Cartões de Crédito (Membresias, Assinaturas, Viagens).</p>
+
+
+                    <h4 class="font-bold text-gray-800 mb-2 border-b">4.6.1 - O Fluxo de Auditoria (A Regra de Ouro)</h4>
+                    <div class="grid md:grid-cols-2 gap-4 text-sm">
+                        <!-- A) Despesas NÃO-RECORRENTES -->
+                        <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <p class="font-bold text-red-800">A) Despesas NÃO-RECORRENTES (Caixinha, Almoços, Viagens):</p>
+                            <p><span class="font-bold">Obrigação:</span> Toda despesa DEVE ser justificada no <span class="text-cyan-600 font-bold">AppSheet</span> (<span class="font-mono">"Despesas"</span>) com o <span class="font-bold">comprovante/NF anexado</span>.</p>
+                        </div>
+                        <!-- B) Despesas RECORRENTES -->
+                        <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <p class="font-bold text-yellow-800">B) Despesas RECORRENTES (Assinaturas: ClickUp, AppSheet, Zapier, etc.):</p>
+                            <p><span class="font-bold">Princípio:</span> Ser proativo para obter a NF. <span class="font-bold">2ª Tentativa:</span> <span class="font-bold">Notificar a Diretoria</span> solicitando acessos.</p>
+                        </div>
+                    </div>
+                    
+                    <h4 class="font-bold text-gray-800 mb-2 border-b mt-4">4.6.2 - O Processo de Fechamento (Conciliação e Pagamento)</h4>
+                    <ul class="list-disc ml-6 space-y-2 text-gray-700 text-sm">
+                        <li><span class="font-bold">Conciliação C/C Itaú:</span> Puxar extrato Itaú e log "Despesas" no <span class="text-cyan-600 font-bold">AppSheet</span>. <span class="font-bold">Cruzamento obrigatório</span>. Lançar no <span class="text-orange-600 font-bold">Omie</span>.</li>
+                        <li><span class="font-bold">Conciliação Cartão de Crédito:</span> Cruzar as linhas (Recorrentes vs. NF / Não-Recorrentes vs. <span class="text-cyan-600 font-bold">AppSheet</span>). Após <span class="font-bold">100% auditada</span>, lançar o pagamento total no <span class="text-orange-600 font-bold">Omie</span> (Módulo 3).</li>
+                    </ul>
+                </div>
+            </details>
+            
+            <!-- 4.7 & 4.8 - Interface com Franqueados -->
+            <details id="submodulo-4-7-8" class="submodule-expander">
+                <summary class="flex justify-between items-center">
+                     <!-- Checkbox de Conclusão - Adicionado flex-1 -->
+                    <span class="flex items-center space-x-3 flex-1">
+                        <input type="checkbox" 
+                            class="submodule-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                            data-module-id="modulo4"
+                            data-submodule-id="submodulo-4-7-8"
+                            data-is-main-module="true"
+                            onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);">
+                        <span class="text-xl font-semibold text-gray-800">4.7 & 4.8 - Interface com Franqueados</span>
+                    </span>
+                    <!-- Seta Dinâmica (Ícone) - Movido para o final -->
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div class="grid md:grid-cols-2 gap-6">
+
+                    <!-- 4.7 - Onboarding Inicial (Taxa de R$ 5.500,00) -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-bold text-gray-800 mb-2 border-b">4.7 - Onboarding Inicial (Taxa de <span class="font-bold">R$ 5.500,00</span>)</h4>
+                        <p class="text-sm text-gray-700 mb-3"><span class="font-bold">Objetivo:</span> Boas-vindas e início da cobrança da taxa inicial.</p>
+                        <ul class="list-disc ml-6 space-y-1 text-xs text-gray-700">
+                            <li><span class="font-bold">A Ligação:</span> Tom de boas-vindas, verificar alinhamento e confirmar ciência da taxa inicial.</li>
+                            <li><span class="font-bold">Ação Financeira:</span> Imediatamente após a ligação, realizar o <span class="font-bold">lançamento da cobrança inicial</span> (Módulo 2: ENTRADA -> Receita de projeto inicial) no <span class="text-cyan-600 font-bold">AppSheet</span>.</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- 4.8 - Apresentação Financeira Pós-Orçamento (70%+30%) -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-bold text-gray-800 mb-2 border-b">4.8 - Apresentação Financeira Pós-Orçamento (<span class="font-bold">70%+30%</span>)</h4>
+                        <p class="text-sm text-gray-700 mb-3">Participantes: Analista Financeiro, Gerente de Montagens, Franqueado. Agendamento: Feito via <span class="text-cyan-600 font-bold">AppSheet</span>.</p>
+                        <p class="semibold text-sm text-dark-quality">Pontos Essenciais a Explicar:</p>
+                        <ul class="list-disc ml-6 space-y-1 text-xs text-gray-700">
+                            <li><span class="font-bold">Fluxo Ideal:</span> 70% (sinal) + 30% (antes da entrega).</li>
+                            <li><span class="font-bold">Fluxo Mínimo:</span> 50% + 20% + 30%.</li>
+                            <li><span class="font-bold text-red-600">Método de Pagamento CRÍTICO:</span> APENAS via <span class="font-bold">documentos de cobrança</span> (PIX Copia e Cola ou Boleto) gerados pelo <span class="text-cyan-600 font-bold">AppSheet</span>/<span class="text-orange-600 font-bold">Omie</span> (<span class="font-bold">NUNCA PIX avulso</span>).</li>
+                        </ul>
+                    </div>
+                </div>
+            </details>
+            
+            <!-- 4.9 - Processamento da Premiação da Equipe de Montagens (Planilha "Atlanta Card") -->
+            <details id="submodulo-4-9" class="submodule-expander">
+                <summary class="flex justify-between items-center">
+                     <!-- Checkbox de Conclusão - Adicionado flex-1 -->
+                    <span class="flex items-center space-x-3 flex-1">
+                        <input type="checkbox" 
+                            class="submodule-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                            data-module-id="modulo4"
+                            data-submodule-id="submodulo-4-9"
+                            data-is-main-module="true"
+                            onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);">
+                        <span class="text-xl font-semibold text-gray-800">4.9 - Processamento da Premiação da Equipe de Montagens (Planilha "Atlanta Card")</span>
+                    </span>
+                    <!-- Seta Dinâmica (Ícone) - Movido para o final -->
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div>
+                    <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4 flex items-start space-x-3 rounded-lg">
+                        <i class="fas fa-lightbulb text-yellow-600 text-xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold text-yellow-800">Princípio Fundamental:</h4>
+                            <p class="text-yellow-700">Garantir que o cálculo seja <span class="font-bold">preciso, auditado e devidamente aprovado</span> antes do pagamento (Módulo 3).</p>
+                        </div>
+                    </div>
+                    <p class="text-sm font-semibold text-gray-700">Frequência: <span class="font-bold">Mensal</span> | Prazo: Entre dias 05 e 10 | Gatilho: E-mail com <span class="font-bold">relatório de montagens finalizadas</span></p>
+
+                    <ol class="list-decimal list-inside space-y-2 text-gray-700 text-sm mt-3">
+                        <li><span class="font-bold">Cálculo:</span> Acessar planilha "Lista de premiados Atlanta card". Preencher <span class="font-bold">Valor = (Qtd de montagens) x (Valor por cargo)</span>.</li>
+                        <li><span class="font-bold">Documentação:</span> Imprimir a planilha preenchida e o e-mail/relatório (gatilho).</li>
+                        <li><span class="font-bold">Validação Gerencial:</span> Entregar os documentos para o Gerente Operativo para revisão e <span class="font-bold">assinatura</span>.</li>
+                        <li><span class="font-bold">Lançamento:</span> Lançar o valor total como Conta a Pagar no <span class="text-orange-600 font-bold">Omie</span> (Módulo 3) e usar os documentos assinados como suporte para a aprovação da Diretoria.</li>
+                    </ol>
+                </div>
+            </details>
+        </section>
+        
+        <!-- Módulo 5 -->
+        <section id="modulo5" class="mb-12">
+            <!-- As barras de progresso modular foram movidas para a sidebar -->
+            <h2 class="text-3xl font-bold text-dark-quality mb-2">Módulo 5: Interface Contábil e Análise Estratégica</h2>
+            <p class="text-gray-700 mb-6">Propósito: Garantir um <span class="font-bold">fechamento contábil preciso</span> e transformar os dados brutos em inteligência acionável para a gestão da empresa.</p>
+            
+            <!-- 5.1 - Fechamento Contábil Mensal (Envio e Acompanhamento) -->
+            <details id="submodulo-5-1" class="submodule-expander">
+                <summary class="flex justify-between items-center">
+                     <!-- Checkbox de Conclusão - Adicionado flex-1 -->
+                    <span class="flex items-center space-x-3 flex-1">
+                        <input type="checkbox" 
+                            class="submodule-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                            data-module-id="modulo5"
+                            data-submodule-id="submodulo-5-1"
+                            data-is-main-module="true"
+                            onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);">
+                        <span class="text-xl font-semibold text-gray-800">5.1 - Fechamento Contábil Mensal (Envio e Acompanhamento)</span>
+                    </span>
+                    <!-- Seta Dinâmica (Ícone) - Movido para o final -->
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div>
+                    <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4 flex items-start space-x-3 rounded-lg">
+                        <i class="fas fa-lightbulb text-yellow-600 text-xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold text-yellow-800">Princípio Fundamental:</h4>
+                            <p class="text-yellow-700">A precisão do fechamento depende da <span class="font-bold">pontualidade e integridade dos envios</span> (extratos e NFs de fora do RJ), bem como da comunicação proativa entre as partes.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between text-sm mb-4">
+                        <p class="font-semibold text-gray-700">Frequência: <span class="font-bold text-dark-quality">Mensal.</span></p>
+                        <p class="font-semibold text-gray-700">Prazos Chave: <span class="font-bold text-red-600">Envio da Documentação: 1º dia útil.</span> | Follow-up: Até o dia 10.</p>
+                    </div>
+
+                    <h4 class="font-bold text-gray-800 mb-2 border-b">Passo a Passo do Processo:</h4>
+                    <ol class="list-decimal list-inside space-y-3 text-gray-700 ol-fluxo-sequencial">
+                        <li class="font-bold text-green-600">🟢 PASSO 1 → A Tarefa Mais Crítica: O Relatório <span class="font-bold">"Espelho"</span></li>
+                        <p class="ml-6 font-bold text-red-600 text-sm">Aviso Importante: <span class="font-bold">Emitir após uma transação do novo mês corromperá a conciliação de saldos.</span></p>
+                        <ul class="list-disc ml-10 space-y-1 text-xs">
+                            <li><span class="font-bold">Ação:</span> No <span class="text-orange-600 font-bold">Omie</span>, gere o relatório <span class="font-bold">"Contas por Cliente ou Fornecedor ROB"</span>. <span class="font-bold">Salve imediatamente</span>.</li>
+                        </ul>
+
+                        <li class="font-bold text-yellow-600">🟡 PASSO 2 → Organização dos Documentos no Google Drive</li>
+                        <p class="ml-6 text-sm">Caminho: <span class="font-mono bg-gray-100 p-0.5 rounded">Quality/Financeiro/Relatórios Mensais Contabilidade/MM - AAAA</span></p>
+                        <ul class="list-disc ml-10 space-y-1 text-xs">
+                            <li>Salve o relatório "Espelho" (Passo 1).</li>
+                            <li>Salve os <span class="font-bold">Extratos Bancários</span> (Omie.Cash, Itaú C/C e Cartões, Sicoob).</li>
+                            <li>Salve as <span class="font-bold">Notas Fiscais de Fora do RJ</span>.</li>
+                        </ul>
+
+                        <li class="font-bold text-red-600">🔴 PASSO 3 → Notificação e Acompanhamento Proativo</li>
+                        <p class="ml-6 text-sm">Envie um e-mail para a contabilidade. Faça <span class="font-bold">Follow-up até o dia 10</span> para confirmar que têm tudo.</p>
+                    </ol>
+                    
+                    <p class="font-bold text-gray-800 mt-4">Reunião de Resultados: <span class="font-bold text-blue-600">Toda terceira quarta-feira do mês (pré-agendada).</span></p>
+                </div>
+            </details>
+            
+            <!-- 5.2 - Conferência dos Relatórios Contábeis... -->
+            <details id="submodulo-5-2" class="submodule-expander">
+                <summary class="flex justify-between items-center">
+                     <!-- Checkbox de Conclusão - Adicionado flex-1 -->
+                    <span class="flex items-center space-x-3 flex-1">
+                        <input type="checkbox" 
+                            class="submodule-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                            data-module-id="modulo5"
+                            data-submodule-id="submodulo-5-2"
+                            data-is-main-module="true"
+                            onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);">
+                        <span class="text-xl font-semibold text-gray-800">5.2 - Conferência dos Relatórios Contábeis e Elaboração/Análise do DRE Gerencial ("Pente Fino")</span>
+                    </span>
+                    <!-- Seta Dinâmica (Ícone) - Movido para o final -->
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div>
+                    <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4 flex items-start space-x-3 rounded-lg">
+                        <i class="fas fa-lightbulb text-yellow-600 text-xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold text-yellow-800">Princípio da Consistência de Categorias (<span class="font-bold">CRÍTICO</span>):</h4>
+                            <p class="text-yellow-700">As categorias devem ser as <span class="font-bold">mesmas nas três áreas</span> (<span class="font-bold text-orange-600">Omie</span>, Gerencial e Contabilidade). <span class="font-bold">Ação em caso de Desvio:</span> Solicitar Correção formalmente. <span class="font-bold">Escalar</span> se a contabilidade alterar categorias sem alinhamento.</p>
+                        </div>
+                    </div>
+
+                    <h4 class="font-bold text-gray-800 mb-2 border-b">As Três Visões do DRE:</h4>
+                    <ul class="list-disc ml-6 space-y-2 text-gray-700 text-sm mb-4">
+                        <li><span class="font-bold">DRE Omie:</span> Base inicial.</li>
+                        <li><span class="font-bold">DRE Gerencial:</span> Ferramenta oficial para análise interna. Permite <span class="font-bold">Previsto vs. Realizado</span> e <span class="font-bold">"Notas Explicativas"</span>.</li>
+                        <li><span class="font-bold">DRE Contábil:</span> Visão oficial e completa (inclui Amortizações, Provisões, Impostos).</li>
+                    </ul>
+
+                    <h4 class="font-bold text-gray-800 mb-2 border-b">Passo a Passo do Processo de Conferência:</h4>
+                    <ol class="list-decimal list-inside space-y-3 text-gray-700 ol-fluxo-sequencial">
+                        <li class="font-bold text-green-600">🟢 PASSO 1 → Criação/Alimentação da Base Gerencial (Pós Dia 05)</li>
+                        <p class="ml-6 text-sm"><span class="font-bold">Alimentar o "Realizado"</span> com o DRE <span class="text-orange-600 font-bold">Omie</span>. <span class="font-bold">Input Manual Essencial:</span> Preencher valor total de vendas das lojas (célula I7) e atualizar o Realizado das Comissões.</p>
+                        
+                        <li class="font-bold text-yellow-600">🟡 PASSO 2 → Recebimento dos Relatórios Contábeis</li>
+                        <p class="ml-6 text-sm">Receber DRE Contábil e Balancete (<span class="font-bold text-red-600">mínimo 2 dias antes da reunião</span>).</p>
+
+                        <li class="font-bold text-red-600">🔴 PASSO 3 → Auditoria do Balancete Contábil (Conciliação)</li>
+                        <p class="ml-6 text-sm"><span class="font-bold">Conferência linha a linha</span>. Saldos Bancários e Contas a Receber/Pagar <span class="font-extrabold text-red-600">DEVEM bater</span> com Omie e o relatório "Espelho".</p>
+
+                        <li class="font-bold text-dark-quality">⚫ PASSO 4 → Conferência Detalhada (DRE Gerencial vs. DRE Contábil)</li>
+                        <p class="ml-6 text-sm"><span class="font-bold">Comparar linha por linha</span>. Investigar diferenças inesperadas. <span class="font-bold">O analista NUNCA deve aceitar uma divergência sem entendê-la completamente.</span></p>
+                        <div class="bg-gray-100 p-3 mt-2 mb-2 rounded-lg ml-6">
+                            <p class="text-sm font-semibold text-gray-800">Atenção às Notas Explicativas:</p>
+                            <p class="text-xs text-gray-600">Obrigatórias para: 1. Explicar diferenças esperadas. 2. Esclarecer variações <span class="font-bold">significativas (>10%)</span>.</p>
+                        </div>
+
+                        <li class="font-bold text-dark-quality">⚫ PASSO 5 → Finalização</li>
+                        <p class="ml-6 text-sm">Ter um DRE Gerencial <span class="font-bold">preciso, auditado e conciliado</span>, pronto para a reunião.</p>
+                    </ol>
+                </div>
+            </details>
+            
+            <!-- 5.3 - Apresentação Mensal de Resultados -->
+            <details id="submodulo-5-3" class="submodule-expander">
+                <summary class="flex justify-between items-center">
+                     <!-- Checkbox de Conclusão - Adicionado flex-1 -->
+                    <span class="flex items-center space-x-3 flex-1">
+                        <input type="checkbox" 
+                            class="submodule-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                            data-module-id="modulo5"
+                            data-submodule-id="submodulo-5-3"
+                            data-is-main-module="true"
+                            onclick="event.stopPropagation(); toggleSubmoduleCompletion(this);">
+                        <span class="text-xl font-semibold text-gray-800">5.3 - Apresentação Mensal de Resultados</span>
+                    </span>
+                    <!-- Seta Dinâmica (Ícone) - Movido para o final -->
+                    <i class="fas fa-caret-right expander-icon"></i>
+                </summary>
+                <div>
+                    <h4 class="font-bold text-gray-800 mb-2 border-b">Estrutura da Apresentação (<span class="font-bold text-red-600">Reunião: 3ª quarta-feira do mês</span>)</h4>
+                    <div class="grid md:grid-cols-3 gap-4 text-sm mt-3">
+                        <!-- Parte 1: Financeira -->
+                        <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p class="font-bold text-blue-800">Parte 1: Apresentação Financeira (<span class="font-bold">Liderada pelo Analista Financeiro</span>)</p>
+                            <ul class="list-disc ml-4 space-y-1">
+                                <li><span class="font-bold">DRE Gerencial</span> (Previsto vs. Realizado, Variações).</li>
+                                <li><span class="font-bold">Contas Resumo:</span> C/P, C/R (Omie) e Disponível na Bolsa (<span class="text-cyan-600 font-bold">AppSheet</span>).</li>
+                            </ul>
+                        </div>
+                        <!-- Parte 2: Contador -->
+                        <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <p class="font-bold text-red-800">Parte 2: Contador</p>
+                            <ul class="list-disc ml-4 space-y-1">
+                                <li><span class="font-bold">DRE Contábil</span> e <span class="font-bold">Balancete</span>.</li>
+                            </ul>
+                            <p class="font-bold mt-1">Papel do Analista: <span class="font-bold">Comentar e conciliar diferenças</span>.</p>
+                        </div>
+                        <!-- Parte 3: Montagens -->
+                        <div class="p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <p class="font-bold text-green-800">Parte 3: Montagens (<span class="font-bold">Liderada pelo Gerente Operativo/Coordenador</span>)</p>
+                            <ul class="list-disc ml-4 space-y-1">
+                                <li><span class="font-bold">Lojas Entregues e em Andamento</span>.</li>
+                                <li><span class="font-bold">Análise Financeira de Montagens:</span> Rentabilidade dos projetos concluídos (ex: relatório "Comissões de montagem fechadas").</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h4 class="font-bold text-gray-800 mb-2 border-b pt-4">Responsabilidades Chave do Analista Financeiro na Reunião:</h4>
+                    <ul class="list-disc ml-6 space-y-1 text-sm text-gray-700">
+                        <li><span class="font-bold">Domínio dos Números Gerenciais:</span> Ser a referência para explicar o DRE Gerencial, variações vs. Previsto.</li>
+                        <li><span class="font-bold">Ponte com a Contabilidade:</span> Explicar diferenças conciliadas (DRE e Balancete).</li>
+                        <li><span class="font-bold">Clareza e Antecipação:</span> Usar as notas da Coluna G para responder proativamente.</li>
+                        <li><span class="font-bold">Auditoria do Balancete:</span> Confirmar a consistência dos saldos contábeis com o <span class="text-orange-600 font-bold">Omie</span>.</li>
+                        <li><span class="font-bold">Suporte:</span> Fornecer dados e relatórios adicionais solicitados.</li>
+                    </ul>
+                </div>
+            </details>
+        </section>
+
+        <!-- Rodapé -->
+        <footer class="mt-12 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
+            <p>&copy; NEXUS Engenharia de Conteúdo - Quality. Versão base: MÓDULO FINANCEIRO (v5.3). Conteúdo inalterado. (Versão V32 - Correção do Cursor do Checkbox)</p>
+        </footer>
+
+    </main>
+    
+    <!-- Script para Interação e Progresso (Atualizado V32) -->
+    <script>
+        const contentArea = document.getElementById('content-area');
+        const sections = document.querySelectorAll('section[id]');
+        const sidebarLinks = document.querySelectorAll('.sidebar-link');
+        const MODULES = ['modulo0', 'modulo1', 'modulo2', 'modulo3', 'modulo4', 'modulo5']; // Atualizado
+        const TOTAL_MAIN_SUBMODULES = 23; // M0:1 + M1:5 + M2:2 + M3:3 + M4:9 + M5:3 = 23 (Atualizado)
+
+        // Variáveis globais para rastreamento do progresso Omie (Módulo 1.4)
+        const OMIE_LIST_ID_NFSE = 'omie-checklist-ul-nfse';
+        const OMIE_LIST_ID_FINANCAS = 'omie-checklist-ul-financas';
+        const OMIE_PROGRESS_CONTAINER_ID = 'progress-container-submodulo-1-4';
+
+        // --- Persistência (LocalStorage) ---
+
+        const saveState = (key, data) => {
+            try {
+                localStorage.setItem(key, JSON.stringify(data));
+            } catch (e) {
+                console.error("Could not save state to localStorage", e);
+            }
+        };
+
+        const loadState = (key, defaultValue) => {
+            try {
+                const item = localStorage.getItem(key);
+                return item ? JSON.parse(item) : defaultValue;
+            } catch (e) {
+                console.error("Could not load state from localStorage", e);
+                return defaultValue;
+            }
+        };
+        
+        // --- Lógica de Desbloqueio (Módulo 0) ---
+
+        const unlockModules = () => {
+            const moduleLinks = document.querySelectorAll('[data-locked-by-m0="true"]');
+            moduleLinks.forEach(link => {
+                // 1. Remove o bloqueio lógico
+                link.removeAttribute('data-locked-by-m0');
+                
+                // 2. Remove as classes visuais de bloqueio
+                link.classList.remove('text-gray-600', 'cursor-not-allowed');
+            });
+            // Opcional: Adicionar uma notificação
+            // console.log("Módulos 1-5 desbloqueados!");
+        };
+        
+        // --- Lógica de Progresso Aninhado (Omie e ClickUp) ---
+
+        /**
+         * NOVO: Verifica se um submódulo deve ser desbloqueado/bloqueado com base no progresso aninhado.
+         * @param {string} checklistId - ID do submódulo aninhado (ex: 'submodulo-1-4', 'submodulo-1-5', 'submodulo-0-1-commitment').
+         * @param {number} percentage - Porcentagem de conclusão.
+         */
+        const checkAndSetSubmoduleCompletion = (checklistId, percentage) => {
+            // Lógica de desbloqueio GLOBAL do Módulo 0 (Compromisso)
+            if (checklistId === 'submodulo-0-1-commitment') {
+                if (percentage === 100) {
+                    unlockModules();
+                } else {
+                    // Re-bloqueia se o compromisso for desmarcado
+                    const moduleLinks = document.querySelectorAll('[data-module]:not([data-module="modulo0"])');
+                    moduleLinks.forEach(link => {
+                        link.setAttribute('data-locked-by-m0', 'true');
+                        link.classList.add('text-gray-600', 'cursor-not-allowed');
+                    });
+                }
+                
+                // Atualiza a barra de progresso do Módulo 0 (que só tem 1 item principal, mas o progress bar deve refletir o compromisso)
+                const module0Section = document.getElementById('modulo0');
+                if (module0Section) {
+                     updateModuleProgress('modulo0');
+                }
+
+                return;
+            }
+
+            // Lógica de Bloqueio/Desbloqueio Padrão (M1.4 / M1.5)
+            if (checklistId !== 'submodulo-1-4' && checklistId !== 'submodulo-1-5') return;
+
+            const submoduleElement = document.getElementById(checklistId);
+            const mainCheckbox = submoduleElement ? submoduleElement.querySelector('summary input.submodule-checkbox') : null;
+            const lockIcon = document.getElementById(`lock-icon-${checklistId}`);
+            const summaryElement = submoduleElement ? submoduleElement.querySelector('summary') : null;
+
+            if (percentage === 100) {
+                // Desbloquear o checkbox principal
+                submoduleElement.removeAttribute('data-locked');
+                if (mainCheckbox) {
+                    mainCheckbox.removeAttribute('disabled');
+                    let submoduleState = loadState('submoduleCompletion', {});
+                    if (submoduleState[checklistId] === undefined) {
+                        submoduleState[checklistId] = false;
+                        saveState('submoduleCompletion', submoduleState);
+                    }
+                }
+                if (lockIcon) lockIcon.style.display = 'none';
+                
+                // NOVO: Adiciona classe para garantir o cursor pointer
+                if (summaryElement) {
+                    summaryElement.classList.add('cursor-pointer');
+                    mainCheckbox.classList.add('cursor-pointer');
+                }
+
+            } else {
+                // Bloquear o checkbox principal
+                submoduleElement.setAttribute('data-locked', 'true');
+                if (mainCheckbox) {
+                    mainCheckbox.checked = false; // Desmarca se for bloqueado
+                    mainCheckbox.setAttribute('disabled', 'true');
+                    let submoduleState = loadState('submoduleCompletion', {});
+                    submoduleState[checklistId] = false;
+                    saveState('submoduleCompletion', submoduleState);
+                }
+                if (lockIcon) lockIcon.style.display = 'inline-block';
+
+                // NOVO: Remove classe para garantir o cursor not-allowed (definido no CSS)
+                if (summaryElement) {
+                    summaryElement.classList.remove('cursor-pointer');
+                    mainCheckbox.classList.remove('cursor-pointer');
+                }
+            }
+            
+            if (submoduleElement) {
+                const moduleId = submoduleElement.closest('section').id;
+                updateModuleProgress(moduleId);
+            }
+        };
+
+        /**
+         * Calcula o progresso de um checklist aninhado (M1.4, M1.5 ou M0.1).
+         * @param {string} checklistId - ID do submódulo (ex: 'submodulo-1-4', 'submodulo-1-5', 'submodulo-0-1-commitment').
+         */
+        const updateNestedProgress = (checklistId) => {
+            let checkboxes;
+            let total;
+            let progressName;
+            let accentColorClass;
+
+            if (checklistId === 'submodulo-0-1-commitment') {
+                // Lógica especial para o checkbox de compromisso (Módulo 0)
+                const commitmentCheckbox = document.querySelector(`input[data-submodule-id="${checklistId}"]`);
+                if (!commitmentCheckbox) return;
+                
+                const completed = commitmentCheckbox.checked ? 1 : 0;
+                const percentage = (completed / 1) * 100; // Total é sempre 1
+                
+                checkAndSetSubmoduleCompletion(checklistId, percentage);
+                return;
+            }
+            
+            // Lógica para checklists com barra de progresso visual (M1.4 e M1.5)
+            const progressContainer = document.getElementById(`progress-container-${checklistId}`);
+            if (checklistId === 'submodulo-1-5') {
+                 checkboxes = document.getElementById('clickup-checklist').querySelectorAll('.training-item input[type="checkbox"]');
+                 total = 6;
+                 progressName = 'Progresso ClickUp';
+                 accentColorClass = 'bg-purple-500';
+            } else if (checklistId === 'submodulo-1-4') {
+                 const list1 = document.getElementById(OMIE_LIST_ID_NFSE);
+                 const list2 = document.getElementById(OMIE_LIST_ID_FINANCAS);
+                 let allItems = [];
+                 if (list1) allItems.push(...list1.querySelectorAll('input[type="checkbox"]'));
+                 if (list2) allItems.push(...list2.querySelectorAll('input[type="checkbox"]'));
+                 checkboxes = allItems;
+                 total = 28; // 4 + 24
+                 progressName = 'Progresso Omie';
+                 accentColorClass = 'bg-orange-500';
+            } else {
+                return;
+            }
+
+            if (!progressContainer || checkboxes.length === 0) return;
+
+            let completed = 0;
+            checkboxes.forEach(cb => {
+                if (cb.checked) {
+                    completed++;
+                }
+            });
+
+            const percentage = total > 0 ? (completed / total) * 100 : 0;
+            const roundedPercentage = Math.round(percentage);
+
+            const progressText = document.getElementById(`progress-text-${checklistId}`);
+            const progressBarFill = document.getElementById(`progress-fill-${checklistId}`);
+
+            if (progressText) {
+                progressText.textContent = `${progressName}: ${completed}/${total} Itens (${roundedPercentage}%)`;
+            }
+            if (progressBarFill) {
+                progressBarFill.className = `progress-bar-fill h-full rounded-full transition-all duration-300 ${percentage === 100 ? 'bg-green-600' : accentColorClass}`;
+                progressBarFill.style.width = `${percentage}%`;
+            }
+            
+            checkAndSetSubmoduleCompletion(checklistId, percentage);
+        };
+
+        /**
+         * Lida com cliques nos checkboxes aninhados (ClickUp, Omie e Compromisso M0).
+         */
+        const toggleNestedChecklistCompletion = (checkbox, checklistId) => {
+            event.stopPropagation();
+            
+            const moduleId = checkbox.closest('section').id;
+            const itemId = checkbox.getAttribute('data-submodule-id');
+
+            // 1. Atualiza o Estado no LocalStorage (para o item aninhado)
+            let submoduleState = loadState('submoduleCompletion', {});
+            submoduleState[itemId] = checkbox.checked;  
+            saveState('submoduleCompletion', submoduleState);
+
+            // 2. Atualiza a Barra de Progresso Aninhada (e executa a lógica de bloqueio)
+            updateNestedProgress(checklistId);
+            
+            // 3. Atualiza a Barra de Progresso do Módulo Pai e Global
+            updateModuleProgress(moduleId);  
+            updateGlobalProgress();
+        };
+
+
+        // --- Lógica de Progresso do Módulo Principal ---
+
+        /**
+         * Atualiza a barra de progresso principal de um módulo (contando apenas checkboxes principais).
+         */
+        const updateModuleProgress = (moduleId) => {
+            const section = document.getElementById(moduleId);
+            if (!section) return;
+
+            // Seleciona APENAS os checkboxes de SUBMÓDULOS PRINCIPAIS (dentro do Summary)
+            const mainCheckboxes = section.querySelectorAll('details > summary input.submodule-checkbox[data-is-main-module="true"]');
+            
+            const total = mainCheckboxes.length;
+            let completed = 0;
+
+            mainCheckboxes.forEach(cb => {
+                // Checa se está concluído E se não está desabilitado (no caso do 1.4/1.5)
+                if (cb.checked && !cb.disabled) {  
+                    completed++;
+                }
+            });
+
+            const percentage = total > 0 ? (completed / total) * 100 : 0;
+            
+            // Tratamento especial para o Módulo 0 (que só tem 1 item que não é um item principal do summary)
+            if (moduleId === 'modulo0') {
+                 const commitmentCheckbox = document.querySelector('input[data-submodule-id="submodulo-0-1-commitment"]');
+                 const m0Progress = commitmentCheckbox && commitmentCheckbox.checked ? 100 : 0;
+                 // A porcentagem real para o progresso do M0
+                 const finalPercentage = m0Progress; 
+                 
+                 const progressBarFill = document.getElementById(`progress-fill-${moduleId}`);
+                 if (progressBarFill) {
+                     progressBarFill.className = `progress-bar-fill h-full rounded-full transition-all duration-300 ${finalPercentage === 100 ? 'bg-green-400' : 'module-fill'}`;
+                     progressBarFill.style.width = `${finalPercentage}%`;
+                 }
+
+            } else {
+                 const progressBarFill = document.getElementById(`progress-fill-${moduleId}`);
+                 if (progressBarFill) {
+                     progressBarFill.className = `progress-bar-fill h-full rounded-full transition-all duration-300 ${percentage === 100 ? 'bg-green-400' : 'module-fill'}`;
+                     progressBarFill.style.width = `${percentage}%`;
+                 }
+            }
+            
+            // Sempre chama a atualização global após a atualização do módulo
+            updateGlobalProgress();
+        };
+
+        /**
+         * Lida com cliques nos checkboxes de submódulos principais.
+         */
+        const toggleSubmoduleCompletion = (checkbox) => {
+            event.stopPropagation();
+            
+            const moduleId = checkbox.closest('section').id;
+            const itemId = checkbox.getAttribute('data-submodule-id');
+            const isCommitment = checkbox.getAttribute('data-is-commitment') === 'true';
+
+            // Se o módulo estiver bloqueado, ignora o clique (proteção visual e lógica)
+            if (checkbox.disabled && !isCommitment) {
+                checkbox.checked = false;  
+                return;
+            }
+            
+            // Tratamento especial para o Módulo 0 (compromisso)
+             if (isCommitment) {
+                updateNestedProgress(itemId); // Desbloqueia M1-M5 e atualiza progresso M0
+                return;
+             }
+             
+            // 1. Atualiza o Estado no LocalStorage
+            let submoduleState = loadState('submoduleCompletion', {});
+            submoduleState[itemId] = checkbox.checked;  
+            saveState('submoduleCompletion', submoduleState);
+
+            // 2. Atualiza a Barra de Progresso do Módulo Pai e Global
+            updateModuleProgress(moduleId);
+        };
+        
+        /**
+         * Atualiza a barra de progresso total na sidebar.
+         */
+        const updateGlobalProgress = () => {
+            const allSections = document.querySelectorAll('main section[id]');
+            let totalMainSubmodules = 0;
+            let completedMainSubmodules = 0;
+
+            allSections.forEach(section => {
+                const isModule0 = section.id === 'modulo0';
+                
+                // Módulos 1 a 5: Contamos os checkboxes principais
+                if (!isModule0) {
+                     const mainCheckboxes = section.querySelectorAll('details > summary input.submodule-checkbox[data-is-main-module="true"]');
+                     totalMainSubmodules += mainCheckboxes.length;
+ 
+                     mainCheckboxes.forEach(cb => {
+                         if (cb.checked && !cb.disabled) {
+                             completedMainSubmodules++;
+                         }
+                     });
+                }
+            });
+            
+            // Módulo 0: Contamos 1 submódulo principal para o progresso global
+            totalMainSubmodules += 1;
+            const commitmentCheckbox = document.querySelector('input[data-submodule-id="submodulo-0-1-commitment"]');
+            if (commitmentCheckbox && commitmentCheckbox.checked) {
+                completedMainSubmodules++;
+            }
+
+            const percentage = totalMainSubmodules > 0 ? (completedMainSubmodules / totalMainSubmodules) * 100 : 0;
+            const roundedPercentage = Math.round(percentage);
+
+            const progressTextGlobal = document.getElementById('progress-text-global');
+            const progressBarFillGlobal = document.getElementById('progress-fill-global');
+
+            if (progressTextGlobal) {
+                progressTextGlobal.textContent = `${completedMainSubmodules}/${totalMainSubmodules} Submódulos (${roundedPercentage}%)`;
+            }
+            if (progressBarFillGlobal) {
+                progressBarFillGlobal.className = `progress-bar-fill h-full rounded-full transition-all duration-300 ${percentage === 100 ? 'bg-green-400' : 'global-fill'}`;
+                progressBarFillGlobal.style.width = `${percentage}%`;
+            }
+        };
+
+
+        // --- Lógica de Checklist Omie (criação dinâmica) ---
+        
+        const initializeOmieChecklistListeners = () => {
+            const checklistId = 'submodulo-1-4';
+
+            // Seleciona todos os itens em ambas as listas Omie
+            const allOmieItems = document.querySelectorAll(`#${OMIE_LIST_ID_NFSE} .omie-item, #${OMIE_LIST_ID_FINANCAS} .omie-item`);
+
+            if (allOmieItems.length === 0) return;
+            
+            const submoduleState = loadState('submoduleCompletion', {});
+            
+            // Itera sobre os itens Omie e cria checkboxes dinamicamente para cada um
+            allOmieItems.forEach(item => {
+                const itemId = item.getAttribute('data-id');
+                
+                // Cria o input checkbox
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'h-4 w-4 mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500';
+                checkbox.setAttribute('data-module-id', 'modulo1');
+                checkbox.setAttribute('data-submodule-id', itemId);  
+                
+                // Carrega o estado de persistência
+                if (submoduleState[itemId] === true) {
+                    checkbox.checked = true;
+                }
+                
+                // Adiciona o listener e a lógica de atualização
+                checkbox.addEventListener('click', (e) => {
+                    e.stopPropagation();  
+                    toggleNestedChecklistCompletion(checkbox, checklistId);
+                });
+                
+                // Pega o conteúdo original antes de limpá-lo
+                const textContent = item.innerHTML;
+                item.innerHTML = ''; // Limpa o conteúdo original
+                
+                // Cria o wrapper flexível
+                const flexWrapper = document.createElement('div');
+                flexWrapper.classList.add('flex', 'items-start', 'space-x-2');
+                
+                // Adiciona o checkbox e o texto ao wrapper
+                flexWrapper.appendChild(checkbox);
+                
+                const textWrapper = document.createElement('p');
+                textWrapper.innerHTML = textContent;
+                flexWrapper.appendChild(textWrapper);
+                
+                // Adiciona o wrapper de volta ao item da lista
+                item.appendChild(flexWrapper);
+                
+                // Finaliza a formatação CSS
+                item.classList.remove('omie-item');
+                item.classList.remove('training-item');
+            });
+
+            // Atualiza o progresso inicial do Omie após a criação dos checkboxes
+            updateNestedProgress(checklistId);
+        };
+
+
+        // --- Lógica de Navegação e Acordeão ---
+
+        /**
+         * Controla a visibilidade dos módulos e a classe 'active' da sidebar.
+         */
+        const showModule = (event, moduleId) => {
+            event.preventDefault();
+
+            // 1. CHECAGEM DE BLOQUEIO M0
+            const targetLink = document.querySelector(`.sidebar-link[data-module="${moduleId}"]`);
+            // Checa se o link tem o atributo de bloqueio E se não é o Módulo 0 (que deve estar sempre acessível)
+            if (targetLink && targetLink.hasAttribute('data-locked-by-m0') && moduleId !== 'modulo0') {
+                 // Exibe a mensagem de bloqueio amigável
+                 const message = "Para prosseguir para o conteúdo técnico, por favor, conclua seu alinhamento cultural no Módulo 0.";
+                 
+                 // Usando uma div temporária para o feedback visual (substitui alert())
+                 const feedbackDiv = document.createElement('div');
+                 feedbackDiv.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg z-50 transition-opacity duration-300';
+                 feedbackDiv.innerHTML = `<p class="font-bold">Acesso Bloqueado!</p><p class="text-sm">${message}</p>`;
+                 document.body.appendChild(feedbackDiv);
+                 
+                 setTimeout(() => {
+                     feedbackDiv.remove();
+                 }, 3000); // Remove a mensagem após 3 segundos
+                 
+                 return; // Impede a navegação
+            }
+
+
+            // 2. Oculta todas as seções e remove a classe 'active' de todos os links
+            sections.forEach(section => {
+                section.style.display = 'none';
+            });
+            sidebarLinks.forEach(link => {
+                link.classList.remove('active');
+            });
+
+            // 3. Exibe a seção alvo
+            const targetSection = document.getElementById(moduleId);
+            if (targetSection) {
+                targetSection.style.display = 'block';
+            }
+
+            // 4. Define o link clicado como ativo
+            const activeLink = document.querySelector(`.sidebar-link[data-module="${moduleId}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+            
+            // 5. Garante que a rolagem volte ao topo da área de conteúdo (para a nova seção)
+            contentArea.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        // Adiciona a lógica de inicialização de acordeão (fecha outros no mesmo módulo)
+        const initializeAccordions = () => {
+            document.querySelectorAll('details').forEach(detail => {
+                detail.addEventListener('toggle', () => {
+                    if (detail.open) {
+                        // Fecha outros detalhes no mesmo módulo
+                        document.querySelectorAll('details').forEach(otherDetail => {
+                            if (otherDetail !== detail && otherDetail.closest('section') === detail.closest('section')) {
+                                otherDetail.open = false;
+                            }
+                        });
+                    }
+                });
+            });
+        };
+
+
+        // --- Inicialização Geral ---
+
+        const initializeAllProgress = () => {
+            
+            // 1. Inicializa Omie Checklist (cria checkboxes e listeners)
+            initializeOmieChecklistListeners();
+
+            // 2. Carrega o estado e aplica nos checkboxes dos Submódulos (main e aninhados ClickUp)
+            const submoduleState = loadState('submoduleCompletion', {});
+            
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                const itemId = checkbox.getAttribute('data-submodule-id');
+                if (submoduleState[itemId] === true) {
+                    checkbox.checked = true;
+                }
+                
+                // Lógica de desabilitação e estado inicial do 1.4/1.5
+                if (itemId === 'submodulo-1-4' || itemId === 'submodulo-1-5') {
+                    const submoduleElement = document.getElementById(itemId);
+                    const lockIcon = document.getElementById(`lock-icon-${itemId}`);
+
+                    // A nova regra CSS já está garantindo o cursor not-allowed/pointer
+                    if (submoduleElement.getAttribute('data-locked') === 'true') {
+                         checkbox.setAttribute('disabled', 'true');
+                         if (lockIcon) lockIcon.style.display = 'inline-block';
+                    } else {
+                        if (lockIcon) lockIcon.style.display = 'none';
+                    }
+                }
+            });
+            
+            // 3. Atualiza o progresso aninhado do ClickUp (garantindo que o bloqueio seja verificado na inicialização)
+            updateNestedProgress('submodulo-1-5');
+            
+            // 4. Atualiza as Barras de Progresso de Todos os Módulos (e a global por cascata)
+            MODULES.forEach(updateModuleProgress);
+            
+            // 5. Inicializa o comportamento de acordeão
+            initializeAccordions();
+            
+            // 6. Verifica o estado de desbloqueio do Módulo 1 (se o compromisso já foi marcado)
+            const commitmentCheckbox = document.querySelector('input[data-submodule-id="submodulo-0-1-commitment"]');
+            if (commitmentCheckbox && commitmentCheckbox.checked) {
+                unlockModules();
+            }
+        };
+
+
+        window.onload = () => {
+            // Garante que apenas o Módulo 0 esteja visível na inicialização e o link 0 esteja ativo
+            sections.forEach(section => {
+                section.style.display = (section.id === 'modulo0') ? 'block' : 'none';
+            });
+            
+            sidebarLinks.forEach(link => {
+                link.classList.remove('active');
+            });
+
+            const modulo0Link = document.querySelector(`.sidebar-link[data-module="modulo0"]`);
+            if (modulo0Link) {
+                modulo0Link.classList.add('active');
+            }
+            
+            initializeAllProgress();
+        };
+    </script>
+</body>
+</html>
